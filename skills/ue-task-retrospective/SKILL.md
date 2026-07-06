@@ -23,7 +23,7 @@ disable-model-invocation: true
 ## 开始前
 
 1. 读取 `.ue-py-config.json`
-2. 读取 `{{KB_ENTRY_PATH}}` 与 `{{KB_ROOT}}/concepts/index.md`（若存在）
+2. 读取 `{{KB_ENTRY_PATH}}` 与 `{{KB_ROOT_FROM_PROJECT}}/concepts/index.md`（若存在）
 3. 列出并读取与本次任务最相关的 `modules/*.md`、`concepts/*.md`
 4. 若项目已有相近 skill（如 `ue-py-evolve`），读取其 `SKILL.md`，避免职责重复
 5. 回顾最近一个完整任务的上下文、计划、关键报错、最终结论
@@ -75,7 +75,7 @@ disable-model-invocation: true
 - 仅对当前任务有效的琐碎步骤
 - 已被现有知识库表达清楚的重复结论
 - **纯 Agent 行为偏差**且已有对应 rule/skill 可表达 → 优先更新规则/skill，KB 只保留交叉引用
-- **规则缺失 / 全库链接漂移 / checklist 与 rules 不一致** → Route 到 `/ue-doc-audit` 或更新 [agent-doc-governance.md]({{KB_ROOT}}/modules/agent-doc-governance.md)
+- **规则缺失 / 全库链接漂移 / checklist 与 rules 不一致** → Route 到 `/ue-doc-audit` 或更新 [agent-doc-governance.md]({{KB_ROOT_FROM_SKILLS}}/modules/agent-doc-governance.md)
 
 ### 2b. Chain Completeness（链路完整性）
 
@@ -107,8 +107,8 @@ disable-model-invocation: true
 |------|------|
 | **Agent 行为约束**（方向锁定、可视化门禁、micro-ReAct） | `rules/` |
 | **特定工作流**（可视化 Debug、复盘、evolve、文档审查） | `skills/<name>/`（全栈漂移 → `/ue-doc-audit`） |
-| **稳定概念** | `{{KB_ROOT}}/concepts/` |
-| **完整案例 / 验收** | `{{KB_ROOT}}/modules/` |
+| **稳定概念** | `{{KB_ROOT_FROM_PROJECT}}/concepts/` |
+| **完整案例 / 验收** | `{{KB_ROOT_FROM_PROJECT}}/modules/` |
 | **通用陷阱速查** | `knowledge-base-entry.md` §5（分类入口 + 链到 concept/module） |
 
 {{SLOT:RETROSPECTIVE_ROUTE_EXTRA_ROWS}}
@@ -255,7 +255,7 @@ disable-model-invocation: true
 <!-- BEGIN OPTIONAL:FIVE_LAYER_GUARDRAIL -->
 ## Escaped bug：五层 guardrail 横向泛化
 
-用户可见回归时，读 [incident-to-guardrail-retrospective.md]({{KB_ROOT}}/modules/incident-to-guardrail-retrospective.md)（五层定义、必答问题、项目化示例的权威来源），在此基础上补做以下增量步骤：
+用户可见回归时，读 [incident-to-guardrail-retrospective.md]({{KB_ROOT_FROM_SKILLS}}/modules/incident-to-guardrail-retrospective.md)（五层定义、必答问题、项目化示例的权威来源），在此基础上补做以下增量步骤：
 
 **Local Fix Generalization Gate**：若逃逸 bug 揭示了一类可复用的根因，除了修复本次具体实例，还要显式列出同类根因在其他表面是否存在——**checked**（已检查确认无问题）、**intentionally excluded**（明确排除且说明理由）、**deferred**（延后处理但已记录）三类之一。典型同类表面包括：不同 actor/方向、不同技能/能力族、新旧 tag pair、通用/专属路径、fallback 路径、Blueprint/DataAsset 变体、AI/玩家两份拷贝。这一步控制的是"扫描范围"，不要求本次任务修完所有同类项，但残留项必须显式列出，不能沉默略过。
 

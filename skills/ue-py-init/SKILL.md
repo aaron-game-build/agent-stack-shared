@@ -55,7 +55,7 @@ powershell.exe -NoProfile -Command "(Get-Process UnrealEditor -ErrorAction Stop 
 **③ 知识库路径**
 ```
 知识库文档放在哪里？
-- {{KB_ROOT}}/（推荐）
+- {{KB_ROOT_FROM_PROJECT}}/（推荐）
 - .claude/knowledge/
 - 自定义路径
 ```
@@ -72,7 +72,7 @@ powershell.exe -NoProfile -Command "(Get-Process UnrealEditor -ErrorAction Stop 
 在确认的路径下创建：
 
 ```
-{{KB_ROOT}}/
+{{KB_ROOT_FROM_PROJECT}}/
 ├── knowledge-base-entry.md  ← 必读路由
 ├── knowledge-base.md        ← 兼容壳 / 模板初始化入口
 └── modules/                 ← 模块能力文档（初始为空）
@@ -96,8 +96,8 @@ mkdir <知识库路径>/modules/
 ```json
 {
   "project_name": "<项目名>",
-  "knowledge_base": "{{KB_ROOT}}/knowledge-base-entry.md",
-  "modules_dir": "{{KB_ROOT}}/modules/",
+  "knowledge_base": "{{KB_ROOT_FROM_PROJECT}}/knowledge-base-entry.md",
+  "modules_dir": "{{KB_ROOT_FROM_PROJECT}}/modules/",
   "ue_python_script": "{{UE_PY_RUN_SCRIPT_PATH}}",
   "toolchain": {
     "readiness_token": "UE_REMOTE_OK",

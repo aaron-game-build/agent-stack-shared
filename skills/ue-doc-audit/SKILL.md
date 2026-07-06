@@ -17,7 +17,7 @@ disable-model-invocation: true
 | 感觉 checklist 与 rules 不一致 | 建议 |
 | 单次 `ue-py-evolve` 只改 1–2 处 KB | 否（只跑 `knowledge_graph_check --check` 即可） |
 
-权威说明：[agent-doc-governance.md]({{KB_ROOT}}/modules/agent-doc-governance.md)
+权威说明：[agent-doc-governance.md]({{KB_ROOT_FROM_SKILLS}}/modules/agent-doc-governance.md)
 
 ## 执行步骤
 

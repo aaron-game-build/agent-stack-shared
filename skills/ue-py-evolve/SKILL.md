@@ -24,7 +24,7 @@ disable-model-invocation: true
 典型结构：
 
 ```
-{{KB_ROOT}}/
+{{KB_ROOT_FROM_PROJECT}}/
 ├── knowledge-base-entry.md  必读路由 + §5 分类入口
 ├── knowledge-base.md        兼容壳，指向 entry
 ├── concepts/                概念层（标签 + 简单例子 + 双向链接）
@@ -86,7 +86,7 @@ disable-model-invocation: true
 
 1. 提取函数到 `Content/Python/{{PY_OPS_PACKAGE}}/<domain>.py`，补 docstring metadata（见 [tagging.md](tagging.md) `python_op`）
 2. `workflows/<name>.py` 只组合 `{{PY_OPS_PACKAGE}}`；根目录保留薄 wrapper（`sys.path` + `main()`）
-3. 更新 [{{PY_OPS_ARCHITECTURE_DOC}}]({{KB_ROOT}}/modules/{{PY_OPS_ARCHITECTURE_DOC}}) 索引表
+3. 更新 [{{PY_OPS_ARCHITECTURE_DOC}}]({{KB_ROOT_FROM_SKILLS}}/modules/{{PY_OPS_ARCHITECTURE_DOC}}) 索引表
 4. concept/module 双向链接补 `{{PY_OPS_PACKAGE}}/...`
 5. 跑 `knowledge_graph_check.py --check --strict`
 
@@ -113,7 +113,7 @@ python "{{UE_PY_EVOLVE_SCRIPTS_DIR}}/knowledge_graph_check.py" --check --strict
 python "{{UE_PY_EVOLVE_SCRIPTS_DIR}}/knowledge_graph_check.py" --inventory
 ```
 
-**Phase 里程碑 / 大改 rules+KB 后**：另跑全栈审查（见 [agent-doc-governance.md]({{KB_ROOT}}/modules/agent-doc-governance.md)）：
+**Phase 里程碑 / 大改 rules+KB 后**：另跑全栈审查（见 [agent-doc-governance.md]({{KB_ROOT_FROM_SKILLS}}/modules/agent-doc-governance.md)）：
 
 ```powershell
 python "{{UE_PY_EVOLVE_SCRIPTS_DIR}}/agent_stack_check.py" --check --strict
@@ -132,7 +132,7 @@ python "{{UE_PY_EVOLVE_SCRIPTS_DIR}}/agent_stack_check.py" --check --strict
 - [ ] 无遗留调试 C++ / 临时 `Build.cs` 路径（本次若做过 Debug 模式）
 - [ ] 改过 C++ 时编译通过（防 Agent 写 `.cpp` 后 `C4335` Mac 行尾 — Windows 须 **CRLF**）
 - [ ] Phase B 已做**运行时回归**（见上，非仅 graph check）
-- [ ] `related_modules` / `related_concepts` 仅指向 `{{KB_ROOT}}` 内文件；`Docs/plans/` 或等价规划目录链到正文「相关文档」
+- [ ] `related_modules` / `related_concepts` 仅指向 `{{KB_ROOT_FROM_PROJECT}}` 内文件；`Docs/plans/` 或等价规划目录链到正文「相关文档」
 
 ## 写入 C++ / 多文件时注意
 
