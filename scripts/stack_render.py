@@ -60,6 +60,176 @@ DEFAULT_RULES_OUT_DIR = "agent-stack/rules"
 DEFAULT_SKILLS_OUT_DIR = "agent-stack/skills"
 DEFAULT_COMMANDS_OUT_DIR = "agent-stack/commands"
 
+# --- adapters (Claude/.codex thin-wrapper generation) --------------------
+#
+# Ported from Oathboard agent-stack/scripts/check_stack.py's sync_wrappers() /
+# render_claude_wrapper() (read-only reference, not modified by this port).
+# Behavior-preservation target: for a manifest whose adapters config points at
+# Oathboard's existing skills_out/commands_out dirs, this generator must
+# reproduce Oathboard's current .claude/.codex wrapper files byte-for-byte
+# (GENERATED header wording aside — see ADAPTER_WRAPPER_STYLES["oathboard"]).
+
+DEFAULT_CLAUDE_SKILLS_DIR = ".claude/skills"
+DEFAULT_CODEX_SKILLS_DIR = ".codex/skills"
+DEFAULT_CODEX_COMMANDS_DIR = ".codex/commands"
+
+
+def get_adapters_config(manifest: dict) -> dict | None:
+    shared = manifest.get("shared") or {}
+    adapters = shared.get("adapters")
+    if not adapters:
+        return None
+    return {
+        "claude_skills_dir": adapters.get("claude_skills_dir", DEFAULT_CLAUDE_SKILLS_DIR),
+        "codex_skills_dir": adapters.get("codex_skills_dir", DEFAULT_CODEX_SKILLS_DIR),
+        "codex_commands_dir": adapters.get("codex_commands_dir", DEFAULT_CODEX_COMMANDS_DIR),
+        "wrapper_style": adapters.get("wrapper_style", "oathboard"),
+        "project_name": adapters.get("project_name"),
+    }
+
+
+def _claude_wrapper_body(name: str, canonical: str, *, kind: str, project_name: str) -> str:
+    """Byte-identical port of Oathboard check_stack.py's render_claude_wrapper()."""
+    label = "workflow" if kind == "skill" else "command"
+    step2 = (
+        "2. Read `.ue-py-config.json`.\n"
+        if kind == "skill"
+        else "2. Read `.ue-py-config.json` (if Editor/build involved).\n"
+    )
+    before_heading = (
+        "Before running Editor Python:\n\n"
+        if kind == "skill"
+        else "Before executing:\n\n"
+    )
+    return (
+        f"---\n"
+        f"name: {name}\n"
+        f"description: Use when Claude Code needs the {project_name} {name} {label}.\n"
+        f"---\n\n"
+        f"# {name}\n\n"
+        f"Canonical {label}: `{canonical}`.\n\n"
+        f"{before_heading}"
+        f"1. Read `{canonical}`.\n"
+        f"{step2}"
+        f"3. Read `Docs/agent-knowledge/knowledge-base-entry.md`.\n"
+    )
+
+
+def render_adapter_wrappers(
+    project_root: Path, manifest: dict, adapters_cfg: dict
+) -> list[str]:
+    """Generate .claude/skills, .codex/skills, .codex/commands thin wrappers
+    for every skill/command named in the manifest's top-level "skills"/
+    "commands" lists, mirroring Oathboard check_stack.py's sync_wrappers().
+
+    Returns the list of project-relative paths written (posix style).
+    """
+    project_name = adapters_cfg.get("project_name") or project_root.name
+
+    skills_out = get_skills_out_config(manifest)
+    commands_out = get_commands_out_config(manifest)
+    skill_canonical_dir = skills_out["dir"]
+    command_canonical_dir = commands_out["dir"]
+
+    claude_skills_dir = project_root / Path(adapters_cfg["claude_skills_dir"])
+    codex_skills_dir = project_root / Path(adapters_cfg["codex_skills_dir"])
+    codex_commands_dir = project_root / Path(adapters_cfg["codex_commands_dir"])
+
+    skills = list(manifest.get("skills", []))
+    skills_set = set(skills)
+    commands = list(manifest.get("commands", []))
+
+    written: list[str] = []
+
+    for skill in skills:
+        canonical = f"{skill_canonical_dir}/{skill}/SKILL.md"
+
+        claude_wrapper = _claude_wrapper_body(skill, canonical, kind="skill", project_name=project_name)
+        claude_path = claude_skills_dir / skill / "SKILL.md"
+        write_text(claude_path, claude_wrapper)
+        written.append(claude_path.relative_to(project_root).as_posix())
+
+        codex_wrapper = claude_wrapper.replace("Claude Code", "Codex")
+        codex_path = codex_skills_dir / skill / "SKILL.md"
+        write_text(codex_path, codex_wrapper)
+        written.append(codex_path.relative_to(project_root).as_posix())
+
+    for command in commands:
+        canonical = f"{command_canonical_dir}/{command}.md"
+
+        codex_wrapper = (
+            f"# {command}\n\n"
+            f"Canonical command: `{canonical}`.\n\n"
+            f"Read the canonical command before executing.\n"
+        )
+        codex_path = codex_commands_dir / f"{command}.md"
+        write_text(codex_path, codex_wrapper)
+        written.append(codex_path.relative_to(project_root).as_posix())
+
+        if command not in skills_set:
+            claude_wrapper = _claude_wrapper_body(
+                command, canonical, kind="command", project_name=project_name
+            )
+            claude_path = claude_skills_dir / command / "SKILL.md"
+            write_text(claude_path, claude_wrapper)
+            written.append(claude_path.relative_to(project_root).as_posix())
+
+    return written
+
+
+def compute_adapter_wrappers(
+    project_root: Path, manifest: dict, adapters_cfg: dict
+) -> dict[str, bytes]:
+    """Same content as render_adapter_wrappers(), computed in-memory for
+    --check-only. Returns {relative_out_path (posix): raw bytes}."""
+    project_name = adapters_cfg.get("project_name") or project_root.name
+
+    skills_out = get_skills_out_config(manifest)
+    commands_out = get_commands_out_config(manifest)
+    skill_canonical_dir = skills_out["dir"]
+    command_canonical_dir = commands_out["dir"]
+
+    claude_skills_rel = Path(adapters_cfg["claude_skills_dir"])
+    codex_skills_rel = Path(adapters_cfg["codex_skills_dir"])
+    codex_commands_rel = Path(adapters_cfg["codex_commands_dir"])
+
+    skills = list(manifest.get("skills", []))
+    skills_set = set(skills)
+    commands = list(manifest.get("commands", []))
+
+    result: dict[str, bytes] = {}
+
+    for skill in skills:
+        canonical = f"{skill_canonical_dir}/{skill}/SKILL.md"
+
+        claude_wrapper = _claude_wrapper_body(skill, canonical, kind="skill", project_name=project_name)
+        claude_rel = (claude_skills_rel / skill / "SKILL.md").as_posix()
+        result[claude_rel] = claude_wrapper.encode("utf-8")
+
+        codex_wrapper = claude_wrapper.replace("Claude Code", "Codex")
+        codex_rel = (codex_skills_rel / skill / "SKILL.md").as_posix()
+        result[codex_rel] = codex_wrapper.encode("utf-8")
+
+    for command in commands:
+        canonical = f"{command_canonical_dir}/{command}.md"
+
+        codex_wrapper = (
+            f"# {command}\n\n"
+            f"Canonical command: `{canonical}`.\n\n"
+            f"Read the canonical command before executing.\n"
+        )
+        codex_rel = (codex_commands_rel / f"{command}.md").as_posix()
+        result[codex_rel] = codex_wrapper.encode("utf-8")
+
+        if command not in skills_set:
+            claude_wrapper = _claude_wrapper_body(
+                command, canonical, kind="command", project_name=project_name
+            )
+            claude_rel = (claude_skills_rel / command / "SKILL.md").as_posix()
+            result[claude_rel] = claude_wrapper.encode("utf-8")
+
+    return result
+
 
 class StackRenderError(RuntimeError):
     """Raised for any rendering/config problem; caller prints and exits 1."""
@@ -161,6 +331,189 @@ def render_shared_text(source_text: str, shared: dict, *, source_name: str) -> s
         raise StackRenderError(f"{source_name}: leftover {{{{ after rendering")
 
     return text
+
+
+# --- --explain: track which manifest key produced each output line ----------
+#
+# For --check-only --explain (P1), a dirty file's diff needs attribution: did
+# the changed line come from a manifest slot/param substitution, or from fixed
+# template prose? This is computed by mirroring the render pipeline
+# (optional -> slot -> param -> whitespace tidy) over annotated (text, keys)
+# segments, so every line of the final rendered body carries the set of
+# manifest keys whose substituted values contributed to it. Lines with an
+# empty key set are fixed template prose. Attribution is line-granular per
+# the P1 spec — substitution output line ranges, not columns.
+
+
+def _annotate_segments(segments: list, pattern: "re.Pattern[str]", value_fn) -> list:
+    """Apply one substitution pass over annotated (text, keys) segments.
+    Replaced values become their own segments tagged with the originating
+    (kind, key) tuple added to the inherited key set."""
+    out: list = []
+    for text, keys in segments:
+        last_end = 0
+        for match in pattern.finditer(text):
+            if match.start() > last_end:
+                out.append((text[last_end : match.start()], keys))
+            tagged_key, value = value_fn(match)
+            out.append((value, keys | {tagged_key}))
+            last_end = match.end()
+        if last_end < len(text):
+            out.append((text[last_end:], keys))
+    return out
+
+
+def compute_body_line_keys(source_text: str, shared: dict, *, source_name: str) -> list[set]:
+    """Return one set of (kind, key) tuples per line of the rendered body
+    (the render_shared_text output, post-tidy). Empty set = fixed template
+    text. kind is "slots" or "params" (params satisfied from the optional map
+    are reported as "optional")."""
+    params = shared.get("params", {})
+    slots = shared.get("slots", {})
+    optional = shared.get("optional", {})
+
+    # Stage 1: optional blocks (pure template-text removal/keep — kept inner
+    # text stays attributed to the template, not to the optional key).
+    after_optional = render_optional_blocks(source_text, optional, source_name=source_name)
+
+    segments: list = [(after_optional, frozenset())]
+
+    # Stages 2/3 in the same order as render_shared_text — slots first, then
+    # params (so a param inside a slot value is attributed to both keys).
+    def _slot_value(match: "re.Match[str]"):
+        key = match.group(1)
+        return ("slots", key), slots.get(key, "")
+
+    def _param_value(match: "re.Match[str]"):
+        key = match.group(1)
+        if key in params:
+            return ("params", key), params[key]
+        return ("optional", key), optional.get(key, "")
+
+    segments = _annotate_segments(segments, SLOT_RE, _slot_value)
+    segments = _annotate_segments(segments, PARAM_RE, _param_value)
+
+    # Convert segments to per-line key sets (pre-tidy). A line's key set is
+    # the union of keys of every non-empty segment piece on that line.
+    pre_lines: list[str] = [""]
+    line_keys: list[set] = [set()]
+    for text, keys in segments:
+        parts = text.split("\n")
+        for i, part in enumerate(parts):
+            if i > 0:
+                pre_lines.append("")
+                line_keys.append(set())
+            pre_lines[-1] += part
+            if part and keys:
+                line_keys[-1].update(keys)
+
+    # Stage 4: mirror tidy_whitespace over the annotated lines. rstrip never
+    # changes line count; the blank-run collapse drops 2nd..nth consecutive
+    # blank lines (blank lines carry no keys that matter).
+    tidied_keys: list[set] = []
+    blank_run = 0
+    for line, keys in zip(pre_lines, line_keys):
+        if line.rstrip() == "":
+            blank_run += 1
+            if blank_run > 1:
+                continue
+        else:
+            blank_run = 0
+        tidied_keys.append(keys)
+
+    # tidy_whitespace joins with "\n" + trailing "\n"; its splitlines() length
+    # equals the tidied list length unless the text ended with newline(s) that
+    # produced a trailing blank entry — mirror by dropping a trailing blank
+    # annotation so the list aligns with body.splitlines().
+    body = render_shared_text(source_text, shared, source_name=source_name)
+    body_line_count = len(body.splitlines())
+    if len(tidied_keys) > body_line_count:
+        tidied_keys = tidied_keys[:body_line_count]
+    return tidied_keys
+
+
+def align_body_keys_to_output(
+    body: str, body_keys: list[set], expected_lines: list[str]
+) -> list[set]:
+    """Map per-line body annotations onto the final output file's lines,
+    accounting for the GENERATED header / frontmatter insertion:
+
+    - body with template frontmatter (skills/commands): fm stays at top, then
+      header + blank are inserted after it, then the body rest;
+    - body without frontmatter (rules md/mdc): all extra lines (config
+      frontmatter and/or header + blank) are prepended.
+
+    link_map (rules) is a same-line literal replacement and never changes the
+    line count, so alignment is unaffected by it.
+    """
+    n_extra = len(expected_lines) - len(body_keys)
+    if n_extra < 0:
+        # Unexpected shape — bail out with no attribution rather than guess.
+        return [set() for _ in expected_lines]
+
+    fm_match = FRONTMATTER_RE.match(body)
+    if fm_match:
+        fm_line_count = len(fm_match.group(1).splitlines())
+        return (
+            body_keys[:fm_line_count]
+            + [set() for _ in range(n_extra)]
+            + body_keys[fm_line_count:]
+        )
+    return [set() for _ in range(n_extra)] + body_keys
+
+
+def explain_dirty_file(
+    source_path: Path,
+    shared: dict,
+    *,
+    source_name: str,
+    expected_text: str,
+    actual_text: str | None,
+) -> list[str]:
+    """Return HINT lines for one dirty rendered file, one per contiguous
+    differing region, classifying each region by whether the *expected*
+    (freshly rendered) side falls inside a slot/param substitution's output
+    lines or in fixed template prose.
+
+    - Slot/param substitution lines -> "HINT: change manifest slots.X" /
+      "HINT: change manifest params.X" (or optional.X)
+    - Fixed template text -> "HINT: edit agent-stack-shared/<file>"
+    """
+    source_text = read_text(source_path)
+    body = render_shared_text(source_text, shared, source_name=source_name)
+    body_keys = compute_body_line_keys(source_text, shared, source_name=source_name)
+
+    expected_lines = expected_text.splitlines()
+    actual_lines = (actual_text or "").splitlines()
+    annotations = align_body_keys_to_output(body, body_keys, expected_lines)
+
+    hints: list[str] = []
+    matcher = difflib.SequenceMatcher(None, actual_lines, expected_lines, autojunk=False)
+    for tag, _i1, _i2, j1, j2 in matcher.get_opcodes():
+        if tag == "equal":
+            continue
+        # Attribute the changed region via the expected (freshly rendered)
+        # side's line range; for a pure delete (j2 == j1) probe the adjacent
+        # line so a deletion still gets attributed.
+        probe = range(j1, j2) if j2 > j1 else range(max(j1 - 1, 0), min(j1 + 1, len(expected_lines)))
+        keys_in_region: set = set()
+        for line_idx in probe:
+            if 0 <= line_idx < len(annotations):
+                keys_in_region.update(annotations[line_idx])
+        if keys_in_region:
+            for kind, key in sorted(keys_in_region):
+                hints.append(f"HINT: change manifest {kind}.{key}")
+        else:
+            hints.append(f"HINT: edit agent-stack-shared/{source_name}")
+
+    # Deduplicate, preserving first-seen order.
+    seen: set = set()
+    deduped: list[str] = []
+    for h in hints:
+        if h not in seen:
+            seen.add(h)
+            deduped.append(h)
+    return deduped or [f"HINT: edit agent-stack-shared/{source_name}"]
 
 
 # --- rules_out config -------------------------------------------------------
@@ -498,6 +851,56 @@ def render_commands(shared_repo: Path, project_root: Path, manifest: dict) -> li
 # --- check-only comparison ---------------------------------------------------
 
 
+def compute_out_to_source_map(
+    shared_repo: Path, manifest: dict, targets: list[str]
+) -> dict[str, tuple[Path, str]]:
+    """Map every rendered rel_out_path (rules/skills/commands targets only —
+    sdd/tdd/pylib are byte-for-byte copies with no substitution to attribute,
+    and adapters wrappers have no shared-repo template source) to
+    (source_path, source_name) so --explain can re-run compute_key_line_map
+    against the right source file. Used only by --check-only --explain.
+    """
+    result: dict[str, tuple[Path, str]] = {}
+
+    if "rules" in targets:
+        rules_out = get_rules_out_config(manifest)
+        out_dir_rel = Path(rules_out["dir"])
+        out_format = rules_out["format"]
+        name_map = rules_out["name_map"]
+        out_ext = ".mdc" if out_format == "mdc" else ".md"
+        for source_path in sorted((shared_repo / RULES_SUBDIR).glob("*.md")):
+            name = source_path.stem
+            out_name = name_map.get(name, name)
+            rel_path = (out_dir_rel / f"{out_name}{out_ext}").as_posix()
+            result[rel_path] = (source_path, f"rules/{name}.md")
+
+    if "skills" in targets:
+        skills_out = get_skills_out_config(manifest)
+        out_root_rel = Path(skills_out["dir"])
+        shared_skills_dir = shared_repo / SKILLS_SUBDIR
+        if shared_skills_dir.is_dir():
+            for skill_dir in sorted(p for p in shared_skills_dir.iterdir() if p.is_dir()):
+                name = skill_dir.name
+                for source_path in _iter_source_files(skill_dir):
+                    if source_path.suffix != ".md":
+                        continue
+                    rel = source_path.relative_to(skill_dir)
+                    dest_rel = (out_root_rel / name / rel).as_posix()
+                    result[dest_rel] = (source_path, f"skills/{name}/{rel.as_posix()}")
+
+    if "commands" in targets:
+        commands_out = get_commands_out_config(manifest)
+        out_dir_rel = Path(commands_out["dir"])
+        shared_commands_dir = shared_repo / COMMANDS_SUBDIR
+        if shared_commands_dir.is_dir():
+            for source_path in sorted(shared_commands_dir.glob("*.md")):
+                name = source_path.stem
+                dest_rel = (out_dir_rel / f"{name}.md").as_posix()
+                result[dest_rel] = (source_path, f"commands/{name}.md")
+
+    return result
+
+
 def compute_rendered_rules(shared_repo: Path, project_root: Path, manifest: dict) -> dict[str, str]:
     """Compute the rendered content for every rule without writing to disk.
     Returns {relative_out_path (posix, relative to project_root): content}.
@@ -625,56 +1028,81 @@ def compute_rendered_commands(shared_repo: Path, project_root: Path, manifest: d
     return result
 
 
-def check_only(shared_repo: Path, project_root: Path, manifest: dict, targets: list[str]) -> int:
+def check_only(
+    shared_repo: Path,
+    project_root: Path,
+    manifest: dict,
+    targets: list[str],
+    *,
+    explain: bool = False,
+) -> int:
     """Render everything in-memory, compare against what's on disk, print
     clean/dirty lists. Returns 0 if all clean, 1 if anything is dirty.
+
+    With explain=True (P1), each dirty file gets one or more HINT lines
+    classifying the diff: falls inside a manifest slot/param substitution
+    span -> "HINT: change manifest slots.X (or params.X)"; falls in fixed
+    template prose -> "HINT: edit agent-stack-shared/<file>".
     """
     clean: list[str] = []
     dirty: list[str] = []
+    # rel_path -> (expected_text_for_explain, actual_text_or_None)
+    dirty_texts: dict[str, tuple[str, str | None]] = {}
+
+    def _record_str(rel_path: str, expected: str, disk_path: Path) -> None:
+        if not disk_path.is_file():
+            dirty.append(rel_path)
+            dirty_texts[rel_path] = (expected, None)
+            return
+        actual = read_text(disk_path)
+        if actual == expected:
+            clean.append(rel_path)
+        else:
+            dirty.append(rel_path)
+            dirty_texts[rel_path] = (expected, actual)
+
+    def _record_bytes(rel_path: str, expected_bytes: bytes, disk_path: Path) -> None:
+        if not disk_path.is_file():
+            dirty.append(rel_path)
+            if rel_path.endswith(".md"):
+                dirty_texts[rel_path] = (expected_bytes.decode("utf-8", "replace"), None)
+            return
+        actual_bytes = disk_path.read_bytes()
+        if actual_bytes == expected_bytes:
+            clean.append(rel_path)
+        else:
+            dirty.append(rel_path)
+            if rel_path.endswith(".md"):
+                dirty_texts[rel_path] = (
+                    expected_bytes.decode("utf-8", "replace"),
+                    actual_bytes.decode("utf-8", "replace"),
+                )
 
     if "rules" in targets:
         rendered = compute_rendered_rules(shared_repo, project_root, manifest)
         for rel_path, expected in sorted(rendered.items()):
-            disk_path = project_root / Path(rel_path)
-            if not disk_path.is_file():
-                dirty.append(rel_path)
-                continue
-            actual = read_text(disk_path)
-            if actual == expected:
-                clean.append(rel_path)
-            else:
-                dirty.append(rel_path)
+            _record_str(rel_path, expected, project_root / Path(rel_path))
 
     for target in ("sdd", "tdd", "pylib"):
         if target not in targets:
             continue
         rendered = compute_rendered_extra_target(shared_repo, target)
         for rel_path, expected_bytes in sorted(rendered.items()):
-            disk_path = project_root / Path(rel_path)
-            if not disk_path.is_file():
-                dirty.append(rel_path)
-                continue
-            actual_bytes = disk_path.read_bytes()
-            if actual_bytes == expected_bytes:
-                clean.append(rel_path)
-            else:
-                dirty.append(rel_path)
+            _record_bytes(rel_path, expected_bytes, project_root / Path(rel_path))
 
     if "skills" in targets:
         rendered = compute_rendered_skills(shared_repo, project_root, manifest)
         for rel_path, expected_bytes in sorted(rendered.items()):
-            disk_path = project_root / Path(rel_path)
-            if not disk_path.is_file():
-                dirty.append(rel_path)
-                continue
-            actual_bytes = disk_path.read_bytes()
-            if actual_bytes == expected_bytes:
-                clean.append(rel_path)
-            else:
-                dirty.append(rel_path)
+            _record_bytes(rel_path, expected_bytes, project_root / Path(rel_path))
 
     if "commands" in targets:
         rendered = compute_rendered_commands(shared_repo, project_root, manifest)
+        for rel_path, expected_bytes in sorted(rendered.items()):
+            _record_bytes(rel_path, expected_bytes, project_root / Path(rel_path))
+
+    adapters_cfg = get_adapters_config(manifest)
+    if adapters_cfg is not None:
+        rendered = compute_adapter_wrappers(project_root, manifest, adapters_cfg)
         for rel_path, expected_bytes in sorted(rendered.items()):
             disk_path = project_root / Path(rel_path)
             if not disk_path.is_file():
@@ -685,14 +1113,43 @@ def check_only(shared_repo: Path, project_root: Path, manifest: dict, targets: l
                 clean.append(rel_path)
             else:
                 dirty.append(rel_path)
+                # Adapters wrappers have no shared-repo template source to
+                # attribute to a line span — the fix is always "regenerate",
+                # driven by manifest skills/commands lists or adapters config.
 
     print("=== stack_render --check-only ===")
     print(f"Clean: {len(clean)}")
     for path in clean:
         print(f"  CLEAN {path}")
     print(f"Dirty: {len(dirty)}")
+
+    source_map: dict[str, tuple[Path, str]] = {}
+    if explain:
+        source_map = compute_out_to_source_map(shared_repo, manifest, targets)
+
     for path in dirty:
         print(f"  DIRTY {path}")
+        if not explain:
+            continue
+        if path not in dirty_texts:
+            # Adapters wrapper (or any non-.md byte target) with no captured
+            # text diff — attribution is structural, not line-based.
+            print("    HINT: regenerate via adapters config / manifest skills|commands lists")
+            continue
+        expected_text, actual_text = dirty_texts[path]
+        if path in source_map:
+            source_path, source_name = source_map[path]
+            hints = explain_dirty_file(
+                source_path,
+                manifest.get("shared") or {},
+                source_name=source_name,
+                expected_text=expected_text,
+                actual_text=actual_text,
+            )
+            for hint in hints:
+                print(f"    {hint}")
+        else:
+            print("    HINT: edit agent-stack-shared/ (byte-copy target — see sdd/tdd/pylib source)")
 
     if dirty:
         return 1
@@ -735,6 +1192,12 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Render in-memory and diff against disk; do not write. Exit 1 if dirty.",
     )
+    parser.add_argument(
+        "--explain",
+        action="store_true",
+        help="With --check-only, print a HINT per dirty file attributing the "
+        "diff to a manifest slot/param or to fixed template text.",
+    )
     args = parser.parse_args(argv)
 
     project_root = Path(args.project).resolve()
@@ -765,7 +1228,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.check_only:
         try:
-            exit_code = check_only(SHARED_REPO_ROOT, project_root, manifest, targets)
+            exit_code = check_only(
+                SHARED_REPO_ROOT, project_root, manifest, targets, explain=args.explain
+            )
         except StackRenderError as exc:
             print(f"ERR: {exc}")
             return 1
@@ -794,6 +1259,12 @@ def main(argv: list[str] | None = None) -> int:
                 written = render_extra_target(SHARED_REPO_ROOT, project_root, target)
                 print(f"Copied {len(written)} file(s) for target '{target}'.")
                 extra_target_tokens.append(target)
+
+        adapters_cfg = get_adapters_config(manifest)
+        if adapters_cfg is not None:
+            written = render_adapter_wrappers(project_root, manifest, adapters_cfg)
+            print(f"Rendered {len(written)} adapter wrapper file(s).")
+            extra_target_tokens.append(f"adapters={len(written)}")
     except StackRenderError as exc:
         print(f"ERR: {exc}")
         return 1

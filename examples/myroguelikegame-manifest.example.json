@@ -1,0 +1,130 @@
+{
+  "_comment": "Lint render-smoke fixture derived from MyRoguelikeGame's real manifest (paths desensitized). NOT live-synced; the real values live in the project repo.",
+  "shared": {
+    "repo": "agent-stack-shared",
+    "targets": [
+      "rules",
+      "skills",
+      "commands"
+    ],
+    "params": {
+      "AUDIT_Q2_TARGET": "`knowledge-base-entry.md` §5 陷阱",
+      "KB_ROOT": "mdc:docs/ue-agent-knowledge",
+      "CODEGRAPH_PROJECT_PATH": "C:/path/to/MyRoguelikeGame",
+      "CODEGRAPH_PATH_FALLBACK": "C:\\Users\\jzd94\\AppData\\Roaming\\npm\\codegraph.cmd",
+      "UTF8_MARKERS_TOOL": "项目 marker 工具（MR 暂缺；参照 Oathboard `oath_utf8_markers.py` 模式）",
+      "KB_ROOT_FROM_SKILLS": "mdc:docs/ue-agent-knowledge",
+      "KB_ROOT_FROM_PROJECT": "docs/ue-agent-knowledge",
+      "KB_ENTRY_PATH": "mdc:docs/ue-agent-knowledge/knowledge-base-entry.md",
+      "UE_PY_RUN_SCRIPT_PATH": ".cursor/skills/ue-py-run/scripts/ue_python.py",
+      "PY_OPS_PACKAGE": "mr_ops",
+      "PY_OPS_ARCHITECTURE_DOC": "python-ops-architecture.md",
+      "UE_PY_EVOLVE_SCRIPTS_DIR": ".cursor/skills/ue-py-evolve/scripts",
+      "PROJECT_ROOT": "C:/path/to/MyRoguelikeGame",
+      "ENGINE_ROOT": "G:/UnrealEngine/UE_5.7/Engine",
+      "PROJECT_NAME": "MyRoguelikeGame",
+      "BUILD_WORKFLOW_DOC": "../../docs/ue-agent-knowledge/modules/build-and-launch-workflow.md",
+      "BUILD_LAUNCH_SCRIPT": "C:/path/to/MyRoguelikeGame/Build-And-Launch.ps1",
+      "PROJECT_WINDOW_TITLE": "MyRoguelikeGame"
+    },
+    "slots": {
+      "QUALITY_GATES_LINKS": "[gates](mdc:docs/ue-agent-knowledge/modules/development-quality-gates.md)、[validation](mdc:docs/ue-agent-knowledge/modules/validation-checklist-core.md)",
+      "READ_ENTRYPOINTS": "`.ue-py-config.json`、`knowledge-base-entry.md`、`AGENTS.md`",
+      "BASELINE_ADR_LINK": "[ADR-0001](mdc:docs/design/decisions/0001-tech-stack-selection.md)",
+      "AUDIT_SCOPE_QUESTION": "§5 陷阱",
+      "AUDIT_Q4_QUESTION": "**首次**接触引擎子系统？→ Lyra diff。",
+      "CARRY_MICRO_GATES": "命中角色表现、ARPG spine、Frozen、首次子系统、IK、probe/audit、combo/Status、俯视 WASD、GAS InputTag、目标选择、锁血、probe 常量/新建/改名 → 读 [micro-gates](mdc:docs/ue-agent-knowledge/modules/react-carry-micro-gates.md)。\n\n高频直达：probe/audit → [assertion](mdc:docs/ue-agent-knowledge/concepts/probe-assertion-selection.md)；首次子系统 → [Lyra](mdc:docs/ue-agent-knowledge/concepts/lyra-reference-anchors.md)；PIE → [playbook](mdc:docs/ue-agent-knowledge/modules/pie-probe-playbook.md)；probe 常量 → [helper](mdc:docs/ue-agent-knowledge/modules/probe-helper-contract.md)；新建/改名 → [authoring](mdc:docs/ue-agent-knowledge/modules/probe-authoring-standards.md)+`probe_hygiene_check`。\n\nRoot-cause generalization gate — escaped bug: name root cause; list siblings checked / excluded / deferred.",
+      "PLAN_LOCK_SCOPE": "多文件改动、Editor、C++、关卡、GAS、批量资产脚本",
+      "MAIN_PATH_DOMAIN_EXAMPLES": " GAS 架构 / 播放路径 / 数据流",
+      "DIRECTION_SWITCH_EXAMPLES": "（DrawDebug→Mesh、Tag→仅 BindKey）",
+      "CONCURRENCY_BACKGROUND_LINK": "完整背景见 [concurrent-agent-coordination.md](mdc:docs/ue-agent-knowledge/modules/concurrent-agent-coordination.md)。",
+      "CONCURRENCY_SERIAL_RESOURCES": "`Content/Python/mr_ops`、root wrapper、task/reload registry",
+      "CONCURRENCY_SHARED_STACK_TARGETS": " `mr_ops`、root wrapper、task registry、reload registry",
+      "DELEGATION_AGENT_POOL": "pie-probe-runner subagent、Codex `mr-coder`（模型选 sonnet/haiku）",
+      "GIT_CLAIM_TOOL_NOTE": "，并用 `scripts/mr-git --`（默认 `--check-claims`，严格告警加 `--strict`）",
+      "CONFIG_RUN_STEPS": "python $uePy -f (Join-Path $PWD \"Content/Python/final_phase1_config.py\")",
+      "DOC_AUDIT_TRIGGERS": "Phase N L4 通过、roadmap 标完成**前** | **是**",
+      "DOC_AUDIT_RELATED_LINKS": "`knowledge-base-entry.md` §Agent 规则索引（Agent 规则路由入口）",
+      "RETROSPECTIVE_ROUTE_EXTRA_ROWS": "- 通用 UE / Python / 编译 / 调试坑 → `docs/ue-agent-knowledge/knowledge-base-entry.md` §5\n- GAS / Phase 1 资产自动化 → `modules/phase1-gas-asset-automation.md`\n- 技能测试场 / 关卡搭建 → `modules/gas-skill-test-arena.md`\n- 验收口径 / Test 流程缺口 → `modules/validation-checklist.md`\n- 质量门禁 / 路径切换标准 → `modules/development-quality-gates.md`\n- Build-And-Launch / 编译工作流 → `modules/build-and-launch-workflow.md`\n- PIE / 输入 / ASC 运行时问题 → `concepts/pie-play-vs-simulate.md` 或 `concepts/l3-audit-vs-l4-pie.md`；若需完整案例可扩 `modules/gas-skill-test-arena.md`",
+      "LONG_TASK_GOVERNANCE_LINK": "完整背景见 [long-task-governance-retrospective.md](mdc:docs/ue-agent-knowledge/modules/long-task-governance-retrospective.md)。",
+      "PYTHON_CONFIG_BOUNDARY_DOC": "[python-gas-asset-limits.md](../../docs/ue-agent-knowledge/concepts/python-gas-asset-limits.md)",
+      "BUILD_REPORT_FORMAT": "Build 是否成功（exit code）、Editor 是否在 180s 内响应 Remote Exec、`final_phase1_config.py` 输出中的 `[OK]` / `[MANUAL]` / `[ERR]`；`[MANUAL]` 项见 [phase1-gas-asset-automation.md](../../docs/ue-agent-knowledge/modules/phase1-gas-asset-automation.md)",
+      "LIVE_CODING_PRE_READ_LINK": "[build-and-launch-workflow.md](../../docs/ue-agent-knowledge/modules/build-and-launch-workflow.md) §Live Coding 适用判定",
+      "RELATED_RUNTIME_DEBUG_LINKS": "GAS 激活调试：PIE 下 `/ue-pie-probe` 或 `dump_asc_activation_specs.py`\n- [gas-input-tag-activation.md](../../docs/ue-agent-knowledge/concepts/gas-input-tag-activation.md)\n- Live Coding 后行为不变 → 先查是否改过 `.h`（`pitfall:LiveCodingSkipsHeaderChange`）",
+      "UIUX_LOCAL_REDIRECT": "MR 本地 UI / HUD / GM 面板工作先走\n> `docs/design/engineering/mr-ui-kit-design-system.md` 与 `docs/ue-agent-knowledge/modules/ui-validation-orchestration.md`。"
+    },
+    "optional": {
+      "PROTECTED_CONTRACTS": "enabled",
+      "PROTECTED_CONTRACTS_REFS": "Q/1/2/R/F [feature](mdc:docs/plans/feature-contract-regression-governance-plan.md)、[combat-core](mdc:docs/plans/combat-core-regression-governance-plan.md)，框架 [protected-contract-framework.md](mdc:docs/ue-agent-knowledge/modules/protected-contract-framework.md)",
+      "CODEGRAPH_DETAIL_DOC": "[codegraph-indexing.md](mdc:docs/ue-agent-knowledge/concepts/codegraph-indexing.md)",
+      "PROJECT_DIRECTION_LOCKS": "默认范围圈：**DrawDebug 地面水平圆**；勿用 `BasicShapes/Cylinder` 代替。可视化详述：[ue-visual-debug-gate.mdc](mdc:.cursor/rules/ue-visual-debug-gate.mdc)、[ue-visual-debug/SKILL.md](mdc:.cursor/skills/ue-visual-debug/SKILL.md)。\n\n**俯视 WASD / 朝向（Phase 8.1）**：用户已认可 **标准 `CacheFixedMoveBasis`（相机 Fwd/Right 投影 XY，无 trig 补偿）** 后，**禁止**擅自改 movement basis 或加 pitch 补偿。投诉「A/D 斜 / 上身拧 / 延迟拧向上」时：**脚与路径已对 → 查 `GetBaseAimRotation()` 与 AnimBP（Layer D）**，勿仅同步 `ControlRotation`。必读 [top-down-movement-aim-chains.md](mdc:docs/ue-agent-knowledge/concepts/top-down-movement-aim-chains.md)。",
+      "PROJECT_TEST_NOTES": "L4/手感需独占 editor 时自动开图；如 editor/PIE/build 冲突，结论标阻塞。",
+      "PROJECT_DELEGATION_NOTES": "- 涉及 PIE 探针、流式房、remote-python、GAS tag 的 UE 任务：先读 [pie-probe-playbook.md](mdc:docs/ue-agent-knowledge/modules/pie-probe-playbook.md)。\n- 剪枝回路：[ue-doc-audit SKILL](mdc:.cursor/skills/ue-doc-audit/SKILL.md) §剪枝 Pass。\n- 多 agent 编排与扇出上限：[multi-agent-orchestration.md](mdc:docs/ue-agent-knowledge/modules/multi-agent-orchestration.md)。",
+      "FIVE_LAYER_GUARDRAIL": "enabled",
+      "LONG_TASK_GOVERNANCE": "enabled",
+      "ESCAPED_BUG_ADDENDUM": "enabled",
+      "VISUAL_DEBUG_PROJECT_IMPL": "参考实现：`UMRAbilityDebugDrawComponent` + `UMRAbilityDebugLibrary::DrawGroundRangeCircle`。端到端：[gas-combat-debug.md](../../../docs/ue-agent-knowledge/modules/gas-combat-debug.md) §端到端。\n\n**CombatRoom 五色**（仍用 DrawDebug，`Duration=0` 持续态 + `RegisterCombatDebugFlash` 事件闪）：蓝=常态/格挡圈；黄=敌人 InRange Capsule + 技能激活脚底圈；红=命中/受伤 Capsule 闪；绿=格挡成功闪（≠ 按住 E 的蓝圈）。详见 [gas-combat-debug.md](../../../docs/ue-agent-knowledge/modules/gas-combat-debug.md) §战斗 Debug 色彩语义。"
+    },
+    "rules_out": {
+      "dir": ".cursor/rules",
+      "format": "mdc",
+      "name_map": {
+        "agent-react": "ue-agent-react",
+        "agent-contracts": "ue-agent-contracts",
+        "agent-output-verbosity": "ue-agent-output-verbosity",
+        "human-validation-handoff": "ue-human-validation-handoff",
+        "codegraph": "codegraph",
+        "agent-doc-safety": "ue-agent-doc-safety",
+        "agent-concurrency": "ue-agent-concurrency",
+        "agent-delegation-cost": "ue-agent-delegation-cost"
+      },
+      "frontmatter": {
+        "agent-react": {
+          "description": "REACT 工作流 — 规划后校验、实施后校验（MyRoguelikeGame UE Agent 默认节奏）",
+          "alwaysApply": true
+        },
+        "agent-contracts": {
+          "description": "Plan Lock + Accepted Direction + BLOCKED 协议（合同类约束合一）",
+          "alwaysApply": true
+        },
+        "agent-output-verbosity": {
+          "description": "Agent 输出 verbosity — 默认 L1 静默 Carry，省 token；BLOCKED/Plan 门禁不受影响",
+          "alwaysApply": true
+        },
+        "human-validation-handoff": {
+          "description": "Human-readable handoff is required for user L4/H validation.",
+          "alwaysApply": true
+        },
+        "codegraph": {
+          "description": "CodeGraph MCP usage guide — when to use which tool",
+          "alwaysApply": true
+        },
+        "agent-concurrency": {
+          "description": "多 Agent 并发协调：资源声明、Editor/PIE/资产独占、冲突与交接",
+          "alwaysApply": true
+        },
+        "agent-doc-safety": {
+          "description": "中文 UTF-8 文档/源码编辑安全 — 乱码信号先查 KB，用 apply_patch，禁 PowerShell 重写中文文件",
+          "alwaysApply": true
+        },
+        "agent-delegation-cost": {
+          "description": "委派判定矩阵与成本纪律 — 何时 codegraph 直连/Explore/subagent，大批量写入委派便宜模型；涉及委派、多文件写入、文档治理、新增规则时读",
+          "alwaysApply": false
+        }
+      },
+      "link_map": {
+        "[agent-contracts.md](agent-contracts.md)": "[ue-agent-contracts.mdc](mdc:.cursor/rules/ue-agent-contracts.mdc)",
+        "[agent-react.md](agent-react.md)": "[ue-agent-react.mdc](mdc:.cursor/rules/ue-agent-react.mdc)",
+        "[codegraph.md](codegraph.md)": "[codegraph.mdc](mdc:.cursor/rules/codegraph.mdc)",
+        "[agent-output-verbosity.md](agent-output-verbosity.md)": "[ue-agent-output-verbosity.mdc](mdc:.cursor/rules/ue-agent-output-verbosity.mdc)",
+        "agent-contracts.md §3": "ue-agent-contracts.mdc §3"
+      }
+    },
+    "skills_out": {
+      "dir": ".cursor/skills"
+    },
+    "commands_out": {
+      "dir": ".cursor/commands"
+    }
+  }
+}

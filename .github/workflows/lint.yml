@@ -1,0 +1,30 @@
+name: template-lint
+
+# Guards the checkable subset of the Template Authoring Rules: OPTIONAL block
+# balance, placeholder <-> MANIFEST-SCHEMA consistency (both directions), and
+# a full render smoke against the example manifests.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  template-lint:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run template lint
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/template_lint.py | tee lint.log
+          grep -q "TEMPLATE_LINT_OK" lint.log

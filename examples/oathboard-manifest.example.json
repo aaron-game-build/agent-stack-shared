@@ -1,0 +1,89 @@
+{
+  "_comment": "Lint render-smoke fixture derived from Oathboard's real manifest (paths desensitized). NOT live-synced; the real values live in the project repo.",
+  "shared": {
+    "repo": "agent-stack-shared",
+    "params": {
+      "AUDIT_Q2_TARGET": "`current-validation-lock.md`",
+      "KB_ROOT": "../../Docs/agent-knowledge",
+      "CODEGRAPH_PROJECT_PATH": "C:/path/to/Oathboard",
+      "CODEGRAPH_PATH_FALLBACK": "C:\\Users\\jzd94\\AppData\\Roaming\\npm\\codegraph.cmd",
+      "UTF8_MARKERS_TOOL": "oath_utf8_markers.py",
+      "KB_ENTRY_PATH": "../../../Docs/agent-knowledge/knowledge-base-entry.md",
+      "UE_PY_RUN_SCRIPT_PATH": "agent-stack/skills/ue-py-run/scripts/ue_python.py",
+      "SYNC_WRAPPERS_COMMAND": "python agent-stack/scripts/check_stack.py --sync",
+      "PY_OPS_PACKAGE": "oath_ops",
+      "PY_OPS_ARCHITECTURE_DOC": "knowledge-base-entry.md",
+      "UE_PY_EVOLVE_SCRIPTS_DIR": "agent-stack/skills/ue-py-evolve/scripts",
+      "PROJECT_ROOT": "C:/path/to/Oathboard",
+      "ENGINE_ROOT": "G:/UnrealEngine/UE_5.7/Engine",
+      "PROJECT_NAME": "Oathboard",
+      "BUILD_WORKFLOW_DOC": "Docs/validation/static-validation-index.md",
+      "BUILD_LAUNCH_SCRIPT": "Build-And-Launch.ps1",
+      "PROJECT_WINDOW_TITLE": "Oathboard",
+      "KB_ROOT_FROM_SKILLS": "../../../Docs/agent-knowledge",
+      "KB_ROOT_FROM_PROJECT": "Docs/agent-knowledge"
+    },
+    "slots": {
+      "QUALITY_GATES_LINKS": "[development-quality-gates.md](../../Docs/agent-knowledge/modules/development-quality-gates.md)",
+      "READ_ENTRYPOINTS": "`.ue-py-config.json`、`Docs/agent-knowledge/knowledge-base-entry.md`、`AGENTS.md`",
+      "BASELINE_ADR_LINK": "[ADR-0001](../../Docs/design/decisions/0001-tech-stack-and-ai-boundary.md)",
+      "AUDIT_SCOPE_QUESTION": "Gate 0 范围是否越界",
+      "AUDIT_Q4_QUESTION": "是否触及 LLM/规则边界？",
+      "CARRY_MICRO_GATES": "命中 intent 解析、承诺账本、棋盘规则、AI 关系、Editor 探针、commandlet、L4 截图 → 读 [development-quality-gates.md](../../Docs/agent-knowledge/modules/development-quality-gates.md) 与 [static-validation-index.md](../../Docs/validation/static-validation-index.md)。",
+      "PLAN_LOCK_SCOPE": "多文件改动、Editor、C++、关卡、批量资产脚本、探针",
+      "MAIN_PATH_DOMAIN_EXAMPLES": "解析/规则/账本架构或数据流",
+      "DIRECTION_SWITCH_EXAMPLES": "",
+      "CONCURRENCY_BACKGROUND_LINK": "",
+      "CONCURRENCY_SERIAL_RESOURCES": "`Content/Python/oath_project`、root wrapper、task/reload registry",
+      "CONCURRENCY_SHARED_STACK_TARGETS": "`oath_project` 共享脚本、task registry、reload registry",
+      "DELEGATION_AGENT_POOL": "general-purpose subagent（模型选 sonnet/haiku）",
+      "GIT_CLAIM_TOOL_NOTE": "",
+      "DOC_AUDIT_TRIGGERS": "Gate 0 L4/H 签核前 | **建议**",
+      "DOC_AUDIT_RELATED_LINKS": "[static-validation-index.md](../../../Docs/validation/static-validation-index.md)",
+      "LONG_TASK_GOVERNANCE_LINK": "",
+      "RETROSPECTIVE_ROUTE_EXTRA_ROWS": "| SDD / FeatureSpec | Docs/production/features/ + feature_specs.py |\n| 探针 / TDD | agent-stack/tdd/、Content/Python/probes/、oath_ops/probe_targets.py |",
+      "BUILD_REPORT_FORMAT": "Build exit code、Remote Exec 是否响应、配置脚本是否打印 OATHBOARD_ALL_STATIC_OK",
+      "PYTHON_CONFIG_BOUNDARY_DOC": "[static-validation-index.md](../../Docs/validation/static-validation-index.md)",
+      "LIVE_CODING_PRE_READ_LINK": "[static-validation-index.md](../../Docs/validation/static-validation-index.md)",
+      "RELATED_RUNTIME_DEBUG_LINKS": "Gate 0 运行时验证 → /ue-pie-probe",
+      "ALREADY_INITIALIZED_GUARD_TEXT": "**Oathboard 主仓库已有** `.ue-py-config.json` 与 `Docs/agent-knowledge/` — 勿覆盖现有 [`knowledge-base-entry.md`](../../../Docs/agent-knowledge/knowledge-base-entry.md)。",
+      "CONFIG_RUN_STEPS": "python $uePy -f (Join-Path $PWD \"Content/Python/setup_gate0_map.py\")\npython Content/Python/oath_project/validate_all_static.py",
+      "UIUX_LOCAL_REDIRECT": "宿主项目若有本地 UI 设计系统文档，优先走项目文档。"
+    },
+    "optional": {
+      "ALREADY_INITIALIZED_GUARD": "yes",
+      "SYNC_WRAPPERS_STEP": "yes",
+      "FIVE_LAYER_GUARDRAIL": "yes",
+      "LONG_TASK_GOVERNANCE": "yes",
+      "ESCAPED_BUG_ADDENDUM": "yes"
+    },
+    "targets": [
+      "rules",
+      "sdd",
+      "tdd",
+      "pylib",
+      "skills",
+      "commands"
+    ]
+  },
+  "skills": [
+    "ue-py-run",
+    "ue-py-init",
+    "ue-py-extend",
+    "ue-py-evolve",
+    "ue-task-retrospective",
+    "ue-doc-audit",
+    "ue-visual-debug",
+    "frontend-design",
+    "ui-ux-pro-max"
+  ],
+  "commands": [
+    "ue-build-launch",
+    "ue-build-no-config",
+    "ue-launch-config",
+    "ue-python-config",
+    "ue-live-coding",
+    "ue-pie-probe",
+    "ue-doc-audit"
+  ]
+}

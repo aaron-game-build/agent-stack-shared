@@ -129,6 +129,7 @@ extension has a ready-made key list. Same three-mechanism convention as above (`
 | Key | Used in | Semantics | Oathboard | MR (draft) |
 |---|---|---|---|---|
 | `ALREADY_INITIALIZED_GUARD` | ue-py-init | Renders a warning paragraph when the project's `ue-py-init` is mostly for re-init/path-repair on an already-initialized repo, not first-time setup. Slot `ALREADY_INITIALIZED_GUARD_TEXT` carries the actual sentence | Configured — `ALREADY_INITIALIZED_GUARD_TEXT`: `**Oathboard 主仓库已有** \`.ue-py-config.json\` 与 \`Docs/agent-knowledge/\` — 勿覆盖现有 [\`knowledge-base-entry.md\`](../../../Docs/agent-knowledge/knowledge-base-entry.md)。` | Not configured (MR's `ue-py-init` still targets genuine first-time setup; block omitted) |
+| `ALREADY_INITIALIZED_GUARD_TEXT` | ue-py-init (inside the ALREADY_INITIALIZED_GUARD block) | The actual warning sentence rendered by the block; supplied in the `optional` map alongside the block trigger | Configured (see row above for the sentence) | n/a (block omitted) |
 | `SYNC_WRAPPERS_STEP` | ue-py-init, ue-doc-audit (skill + command) | Renders the "同步 agent-stack wrappers" closing step that calls `check_stack.py --sync`, reusing the same `SYNC_WRAPPERS_COMMAND` param inside | Configured — Oathboard already produces Cursor/Codex adapters via `--sync` | Not configured yet — enable once MR migrates to `--pull` and gets its own `--sync` producer |
 | `FIVE_LAYER_GUARDRAIL` | ue-task-retrospective | Renders the escaped-bug five-layer guardrail addendum (Local Fix Generalization Gate + required output table), deduplicated against the project's own five-layer module (linked via `{{KB_ROOT}}`, not re-defined inline) | Configured — links to `incident-to-guardrail-retrospective.md` (36-line module, already has the five-layer table + required questions + Oathboard examples; this block only adds the increment MR had beyond that: the Generalization Gate + visual-evidence 3-way split + output-table template) | Configured (draft) — MR's own `.cursor/skills/ue-task-retrospective/SKILL.md` originated this content; once MR adopts the shared skill it would link its own five-layer module the same way |
 | `LONG_TASK_GOVERNANCE` | ue-task-retrospective | Renders the long-task governance checklist (scope audit, evidence layering, multi-agent reconciliation, commit scope, residual routing). Self-contained; `{{SLOT:LONG_TASK_GOVERNANCE_LINK}}` may be left empty | Configured — Oathboard has no dedicated module yet, so `LONG_TASK_GOVERNANCE_LINK` renders empty; the checklist itself still applies | Configured (draft) — MR has `long-task-governance-retrospective.md`, so its `LONG_TASK_GOVERNANCE_LINK` would point there |
@@ -148,3 +149,23 @@ extension has a ready-made key list. Same three-mechanism convention as above (`
   Layer/Question/Destination rows already in `incident-to-guardrail-retrospective.md` — the
   optional block links out to that module and only adds the Local Fix Generalization Gate and the
   output-table requirement, which that module does not yet have.
+
+## Adapters (optional manifest node)
+
+Projects that want the renderer to also emit tool-adapter thin wrappers set `shared.adapters`:
+
+```json
+"adapters": {
+  "project_name": "Oathboard",
+  "claude_skills_dir": ".claude/skills",
+  "codex_skills_dir": ".codex/skills",
+  "codex_commands_dir": ".codex/commands"
+}
+```
+
+- All directory fields are optional (defaults shown). `project_name` defaults to the project
+  root's directory name and appears in wrapper descriptions.
+- Wrappers are generated for every name in the manifest's top-level `skills` / `commands` lists
+  (which may include project-local entries such as `ue-pie-probe` — wrappers point at the
+  canonical file regardless of whether it is shared-rendered or hand-written).
+- Projects without the node are untouched (MR hand-writes its `.codex/` wrappers today).

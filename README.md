@@ -49,10 +49,15 @@ via a thin wrapper (Oathboard `check_stack.py --pull/--push`, MR `scripts/stack_
   Cursor/Codex/Claude adapters. Rendered files get a header:
   `<!-- GENERATED from agent-stack-shared; edit there, not here -->`. Any leftover `{{` after
   rendering is a hard error.
-- **`--push`** (v1, deliberately conservative): **does not** auto-write back to this shared repo.
-  It diffs the project's local rules against the last-pulled rendering baseline and prints a
-  report of "these local edits look like they belong in shared file X" — a human then manually
-  edits the shared rule here. No automatic reverse-rendering in v1.
+- **`--push`** (deliberately conservative): **does not** auto-write back to this shared repo.
+  It re-renders in memory and diffs against the project's files. With `--explain`, each dirty
+  line is attributed to its origin: inside a slot/param render region → `HINT: change manifest
+  slots.X`; in fixed template text → `HINT: edit agent-stack-shared/<file>`. A human then makes
+  the edit in the right place. No automatic reverse-rendering.
+- **Adapter emission**: a project that sets the manifest `shared.adapters` node gets its
+  `.claude/skills/` and `.codex/` thin wrappers generated directly by the renderer (ported
+  byte-identical from Oathboard's former `check_stack.py --sync`); projects without the node are
+  unaffected. See MANIFEST-SCHEMA §Adapters.
 
 Once a project adopts `--pull`, its local `agent-stack/rules/` stops being hand-edited canonical
 content — the Drift Rule in that project's `CLAUDE.md`/`AGENTS.md` needs a one-line update to say
@@ -90,6 +95,10 @@ Distilled from the 2026-07-06/07 convergence retrospective (full analysis: Oathb
    them into generic prose.
 6. **Consumers halt-and-report on template flaws** instead of working around them locally — the
    fix belongs here, next to the schema row that documents it.
+
+The mechanically checkable subset of these rules (OPTIONAL block balance, placeholder↔schema
+bidirectional consistency, render smoke on `examples/*.json`) is enforced by
+`scripts/template_lint.py`, which runs in this repo's CI on every push/PR.
 
 ## Design decisions already locked (see Oathboard's `stack-merge-proposal.md` for full rationale)
 
