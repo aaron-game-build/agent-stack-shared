@@ -53,7 +53,7 @@ After rendering, any leftover `{{` in the output is a hard error (missing key).
 | `CONCURRENCY_BACKGROUND_LINK` | agent-concurrency.md | Full trailing sentence pointing to the concurrency background doc, e.g. `完整背景见 [x](...)。` — or empty. The template carries no sentence stub, so an empty value renders cleanly | empty (Oathboard has no such doc yet) | `完整背景见 [concurrent-agent-coordination.md](mdc:docs/ue-agent-knowledge/modules/concurrent-agent-coordination.md)。` (draft) |
 | `CONCURRENCY_SERIAL_RESOURCES` | agent-concurrency.md | Project-specific resources that must be serialized | (Oathboard draft on integration, e.g. `Content/Python/oath_project`, root wrapper, task/reload registry) | `` `Content/Python/mr_ops`、root wrapper、task/reload registry `` |
 | `CONCURRENCY_SHARED_STACK_TARGETS` | agent-concurrency.md | Shared stack targets no two agents may edit concurrently | (Oathboard draft, e.g. `oath_project` shared scripts, task registry) | `` `mr_ops`、root wrapper、task registry、reload registry `` |
-| `DELEGATION_AGENT_POOL` | agent-delegation-cost.md | Named cheap-model subagents/tools available for delegation | (Oathboard draft — general-purpose subagent w/ sonnet/haiku; no named coder tool yet) | `pie-probe-runner subagent`、Codex `mr-coder` |
+| `DELEGATION_AGENT_POOL` | agent-delegation-cost.md | Named cheap-model subagents/tools available for delegation. Include the model guidance inside the value (e.g. `（模型选 sonnet/haiku）`) — the template adds no model note of its own | (Oathboard draft — general-purpose subagent w/ sonnet/haiku; no named coder tool yet) | `pie-probe-runner subagent`、Codex `mr-coder` |
 
 ## Optional blocks
 
