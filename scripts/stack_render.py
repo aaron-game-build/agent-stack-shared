@@ -236,6 +236,11 @@ def render_rules(shared_repo: Path, project_root: Path, manifest: dict) -> list[
         name = source_path.stem
         source_text = read_text(source_path)
         body = render_shared_text(source_text, shared, source_name=f"rules/{name}.md")
+        # link_map applies only to the rendered body — never to the
+        # GENERATED header/frontmatter, which may legitimately contain a
+        # substring (e.g. "agent-contracts.md") that a link_map key also
+        # matches.
+        body = apply_link_map(body, link_map)
 
         out_name = name_map.get(name, name)
 
@@ -248,8 +253,6 @@ def render_rules(shared_repo: Path, project_root: Path, manifest: dict) -> list[
             header_comment = PULL_GENERATED_HEADER.format(name=name)
             content = header_comment + "\n" + body
             out_ext = ".md"
-
-        content = apply_link_map(content, link_map)
 
         out_path = out_dir / f"{out_name}{out_ext}"
         write_text(out_path, content)
@@ -344,6 +347,8 @@ def compute_rendered_rules(shared_repo: Path, project_root: Path, manifest: dict
         name = source_path.stem
         source_text = read_text(source_path)
         body = render_shared_text(source_text, shared, source_name=f"rules/{name}.md")
+        # See render_rules(): link_map applies only to the rendered body.
+        body = apply_link_map(body, link_map)
 
         out_name = name_map.get(name, name)
         if out_format == "mdc":
@@ -356,16 +361,20 @@ def compute_rendered_rules(shared_repo: Path, project_root: Path, manifest: dict
             content = header_comment + "\n" + body
             out_ext = ".md"
 
-        content = apply_link_map(content, link_map)
         rel_path = (out_dir_rel / f"{out_name}{out_ext}").as_posix()
         result[rel_path] = content
 
     return result
 
 
-def compute_rendered_extra_target(shared_repo: Path, target: str) -> dict[str, str]:
+def compute_rendered_extra_target(shared_repo: Path, target: str) -> dict[str, bytes]:
     """Compute rendered content for an sdd/tdd/pylib target without writing.
-    Returns {relative_out_path (posix, relative to project_root's agent-stack/): content}.
+
+    Returns {relative_out_path (posix, relative to project_root's agent-stack/): raw bytes}.
+    Bytes (not str) so the comparison in check_only() exactly matches what
+    render_extra_target()/copy_dir_tree() actually write to disk — .py files
+    are copied byte-for-byte via shutil.copyfile, so no newline translation
+    must happen on either side of the comparison.
     """
     if target == "sdd":
         source_dir, rel_prefix, dest_prefix = shared_repo / SDD_SUBDIR, "sdd", "agent-stack/sdd"
@@ -376,7 +385,7 @@ def compute_rendered_extra_target(shared_repo: Path, target: str) -> dict[str, s
     else:
         raise StackRenderError(f"unknown target: {target}")
 
-    result: dict[str, str] = {}
+    result: dict[str, bytes] = {}
     for source_path in sorted(source_dir.rglob("*")):
         if "__pycache__" in source_path.parts:
             continue
@@ -389,12 +398,10 @@ def compute_rendered_extra_target(shared_repo: Path, target: str) -> dict[str, s
             rel_posix = f"{rel_prefix}/{rel.as_posix()}"
             header = GENERATED_MD_HEADER.format(rel=rel_posix)
             body = read_text(source_path)
-            result[dest_rel] = header + "\n" + body
+            result[dest_rel] = (header + "\n" + body).encode("utf-8")
         else:
-            # Binary-safe: read raw bytes, decode as utf-8 for dict value; the
-            # actual on-disk comparison for non-md files is done in bytes by
-            # the caller when needed. For .py files we assume utf-8 text.
-            result[dest_rel] = source_path.read_bytes().decode("utf-8")
+            # Byte-for-byte copy target (e.g. .py) — compare raw bytes.
+            result[dest_rel] = source_path.read_bytes()
 
     return result
 
@@ -423,22 +430,13 @@ def check_only(shared_repo: Path, project_root: Path, manifest: dict, targets: l
         if target not in targets:
             continue
         rendered = compute_rendered_extra_target(shared_repo, target)
-        for rel_path, expected in sorted(rendered.items()):
+        for rel_path, expected_bytes in sorted(rendered.items()):
             disk_path = project_root / Path(rel_path)
             if not disk_path.is_file():
                 dirty.append(rel_path)
                 continue
-            try:
-                actual = read_text(disk_path)
-            except UnicodeDecodeError:
-                actual_bytes = disk_path.read_bytes()
-                expected_bytes = expected.encode("utf-8")
-                if actual_bytes == expected_bytes:
-                    clean.append(rel_path)
-                else:
-                    dirty.append(rel_path)
-                continue
-            if actual == expected:
+            actual_bytes = disk_path.read_bytes()
+            if actual_bytes == expected_bytes:
                 clean.append(rel_path)
             else:
                 dirty.append(rel_path)
