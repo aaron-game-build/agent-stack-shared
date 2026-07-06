@@ -27,6 +27,9 @@
 - 高往返 subagent（如 PIE probe runner）：只返「绿 token / 失败层级(L3/L4) / 根因 / 改文件」。
 - 所有 subagent：先写已覆盖，再写待探索。
 - 委派前检查任务描述含 `npm/node/python/git/npx/Bash`：含 → 留主线。
+- **任务书显式写「禁止使用 Agent 工具或任何委派」**——嵌套委派会出现互相等待、返回元叙述而非结果
+  （`pitfall:NestedDelegationDeadlock`，2026-07-06 两次实翻）；需要拆分时由主线拆成多个平级 subagent。
+- 涉及共享资产/模板时给 subagent 停工条款：发现上游缺陷**停工报告**，不许就地绕过——修复归上游。
 
 ## 4. Subagent 存活检测
 
