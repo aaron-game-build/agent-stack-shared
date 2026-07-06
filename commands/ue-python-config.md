@@ -21,10 +21,10 @@ $uePy = Join-Path $PWD $cfg.ue_python_script
 python $uePy $cfg.toolchain.readiness_ping
 ```
 
-4. ping 成功后执行配置（**推荐 `-f` 文件模式，禁止 inline 大段 Python**）：
+4. ping 成功后执行配置与后续校验（**推荐 `-f` 文件模式，禁止 inline 大段 Python**）：
 
 ```powershell
-python $uePy -f (Join-Path $PWD "{{CONFIG_SCRIPT}}")
+{{SLOT:CONFIG_RUN_STEPS}}
 ```
 
 5. 汇报 {{SLOT:BUILD_REPORT_FORMAT}}；未完成的必做项不得宣称验收通过

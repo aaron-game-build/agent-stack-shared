@@ -32,7 +32,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 SHARED_REPO_ROOT = SCRIPT_DIR.parent
 
 DEFAULT_TARGETS = ["rules"]
-VALID_TARGETS = {"rules", "sdd", "tdd", "pylib"}
+VALID_TARGETS = {"rules", "sdd", "tdd", "pylib", "skills", "commands"}
 
 PULL_GENERATED_HEADER = (
     "<!-- GENERATED from agent-stack-shared/rules/{name}.md via stack_render.py --pull; "
@@ -53,8 +53,12 @@ RULES_SUBDIR = "rules"
 SDD_SUBDIR = "sdd"
 TDD_SUBDIR = "tdd"
 PYLIB_SUBDIR = "pylib"
+SKILLS_SUBDIR = "skills"
+COMMANDS_SUBDIR = "commands"
 
 DEFAULT_RULES_OUT_DIR = "agent-stack/rules"
+DEFAULT_SKILLS_OUT_DIR = "agent-stack/skills"
+DEFAULT_COMMANDS_OUT_DIR = "agent-stack/commands"
 
 
 class StackRenderError(RuntimeError):
@@ -187,6 +191,36 @@ def apply_link_map(text: str, link_map: dict) -> str:
     for literal_from, literal_to in link_map.items():
         text = text.replace(literal_from, literal_to)
     return text
+
+
+def get_skills_out_config(manifest: dict) -> dict:
+    shared = manifest.get("shared") or {}
+    skills_out = shared.get("skills_out") or {}
+    return {"dir": skills_out.get("dir", DEFAULT_SKILLS_OUT_DIR)}
+
+
+def get_commands_out_config(manifest: dict) -> dict:
+    shared = manifest.get("shared") or {}
+    commands_out = shared.get("commands_out") or {}
+    return {"dir": commands_out.get("dir", DEFAULT_COMMANDS_OUT_DIR)}
+
+
+FRONTMATTER_RE = re.compile(r"\A(---\r?\n.*?\r?\n---\r?\n?)", re.DOTALL)
+
+
+def insert_generated_header_md(body: str, rel: str) -> str:
+    """Insert the GENERATED header into a rendered .md file's content.
+
+    If the content starts with a `---` frontmatter block, the header goes
+    immediately after it; otherwise the header goes at the very first line.
+    """
+    header = GENERATED_MD_HEADER.format(rel=rel)
+    match = FRONTMATTER_RE.match(body)
+    if match:
+        frontmatter = match.group(1)
+        rest = body[match.end():]
+        return frontmatter + header + "\n" + rest
+    return header + "\n" + body
 
 
 def build_mdc_frontmatter(name: str, frontmatter_cfg: dict) -> str:
@@ -324,6 +358,143 @@ def render_extra_target(shared_repo: Path, project_root: Path, target: str) -> l
     raise StackRenderError(f"unknown target: {target}")
 
 
+# --- skills/commands rendering ----------------------------------------------
+#
+# Unlike sdd/tdd/pylib (whole-directory delete-then-copy), skill/command
+# sources are template files rendered at file granularity: .md files go
+# through the same optional-block -> slot -> param -> whitespace pipeline as
+# rules/*.md, and non-.md files (scripts/*.py, data/*.csv, etc.) are copied
+# byte-for-byte. Only files that exist in the shared repo are written or
+# overwritten — skill/command directories are never deleted wholesale.
+#
+# This matters at two levels:
+#   - a project may keep its own project-only skill dirs or command files
+#     alongside the shared ones (e.g. a project-only command like
+#     ue-pie-probe.md with no shared counterpart);
+#   - a single skill directory that DOES have a shared counterpart may still
+#     mix the shared template file (SKILL.md) with project-owned sibling
+#     files that have no shared counterpart at all — e.g. ue-py-run's
+#     scripts/ue_python.py, ue-py-evolve's scripts/*.py + tagging.md, or
+#     ue-task-retrospective's examples.md. Deleting the whole directory
+#     before writing would destroy those every time; only touching files
+#     that exist under the matching shared/skills/<name>/ path keeps them
+#     intact.
+
+
+def _iter_source_files(source_dir: Path):
+    for source_path in sorted(source_dir.rglob("*")):
+        if "__pycache__" in source_path.parts:
+            continue
+        if source_path.is_dir():
+            continue
+        yield source_path
+
+
+def render_one_skill_or_command_file(
+    source_path: Path, source_dir: Path, *, shared: dict, rel_prefix: str
+) -> bytes:
+    """Render a single shared source file's content as bytes ready to write.
+
+    .md files: full render pipeline + GENERATED header (after frontmatter, if
+    any). Non-.md files: raw bytes, unchanged.
+    """
+    rel = source_path.relative_to(source_dir)
+    if source_path.suffix == ".md":
+        rel_posix = f"{rel_prefix}/{rel.as_posix()}"
+        source_text = read_text(source_path)
+        body = render_shared_text(source_text, shared, source_name=rel_posix)
+        content = insert_generated_header_md(body, rel_posix)
+        return content.encode("utf-8")
+    return source_path.read_bytes()
+
+
+def render_skills(shared_repo: Path, project_root: Path, manifest: dict) -> list[str]:
+    """Render every shared skills/*/ directory into the project's configured
+    skills_out location.
+
+    Only files that have a shared-repo counterpart are written/overwritten —
+    each skill directory is never deleted wholesale. A skill directory may
+    legitimately mix shared template files (SKILL.md) with project-owned
+    sibling files that have no shared counterpart at all (e.g. ue-py-run's
+    scripts/ue_python.py, ue-py-evolve's scripts/*.py + tagging.md,
+    ue-task-retrospective's examples.md) — those must never be touched or
+    deleted by this renderer.
+
+    Returns the list of skill names rendered.
+    """
+    shared = manifest.get("shared")
+    if not shared:
+        raise StackRenderError("manifest has no 'shared' node")
+
+    shared_skills_dir = shared_repo / SKILLS_SUBDIR
+    if not shared_skills_dir.is_dir():
+        raise StackRenderError(f"shared stack has no skills/ directory: {shared_skills_dir}")
+
+    skill_dirs = sorted(p for p in shared_skills_dir.iterdir() if p.is_dir())
+    if not skill_dirs:
+        raise StackRenderError(f"shared stack skills/ directory is empty: {shared_skills_dir}")
+
+    skills_out = get_skills_out_config(manifest)
+    out_root = project_root / Path(skills_out["dir"])
+
+    rendered_names: list[str] = []
+    for skill_dir in skill_dirs:
+        name = skill_dir.name
+        dest_dir = out_root / name
+        dest_dir.mkdir(parents=True, exist_ok=True)
+
+        for source_path in _iter_source_files(skill_dir):
+            rel = source_path.relative_to(skill_dir)
+            dest_path = dest_dir / rel
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            content = render_one_skill_or_command_file(
+                source_path, skill_dir, shared=shared, rel_prefix=f"skills/{name}"
+            )
+            with open(dest_path, "wb") as f:
+                f.write(content)
+
+        rendered_names.append(name)
+
+    return rendered_names
+
+
+def render_commands(shared_repo: Path, project_root: Path, manifest: dict) -> list[str]:
+    """Render every shared commands/*.md into the project's configured
+    commands_out location. Only files with a shared counterpart are
+    overwritten; project-only command files are left alone.
+
+    Returns the list of command names rendered.
+    """
+    shared = manifest.get("shared")
+    if not shared:
+        raise StackRenderError("manifest has no 'shared' node")
+
+    shared_commands_dir = shared_repo / COMMANDS_SUBDIR
+    if not shared_commands_dir.is_dir():
+        raise StackRenderError(f"shared stack has no commands/ directory: {shared_commands_dir}")
+
+    source_paths = sorted(shared_commands_dir.glob("*.md"))
+    if not source_paths:
+        raise StackRenderError(f"shared stack commands/ directory is empty: {shared_commands_dir}")
+
+    commands_out = get_commands_out_config(manifest)
+    out_dir = project_root / Path(commands_out["dir"])
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    rendered_names: list[str] = []
+    for source_path in source_paths:
+        name = source_path.stem
+        content = render_one_skill_or_command_file(
+            source_path, shared_commands_dir, shared=shared, rel_prefix="commands"
+        )
+        dest_path = out_dir / f"{name}.md"
+        with open(dest_path, "wb") as f:
+            f.write(content)
+        rendered_names.append(name)
+
+    return rendered_names
+
+
 # --- check-only comparison ---------------------------------------------------
 
 
@@ -406,6 +577,54 @@ def compute_rendered_extra_target(shared_repo: Path, target: str) -> dict[str, b
     return result
 
 
+def compute_rendered_skills(shared_repo: Path, project_root: Path, manifest: dict) -> dict[str, bytes]:
+    """Compute rendered content for the skills target without writing.
+
+    Returns {relative_out_path (posix, relative to project_root): raw bytes}.
+    """
+    shared = manifest.get("shared")
+    shared_skills_dir = shared_repo / SKILLS_SUBDIR
+    skill_dirs = sorted(p for p in shared_skills_dir.iterdir() if p.is_dir())
+
+    skills_out = get_skills_out_config(manifest)
+    out_root_rel = Path(skills_out["dir"])
+
+    result: dict[str, bytes] = {}
+    for skill_dir in skill_dirs:
+        name = skill_dir.name
+        for source_path in _iter_source_files(skill_dir):
+            rel = source_path.relative_to(skill_dir)
+            dest_rel = (out_root_rel / name / rel).as_posix()
+            result[dest_rel] = render_one_skill_or_command_file(
+                source_path, skill_dir, shared=shared, rel_prefix=f"skills/{name}"
+            )
+
+    return result
+
+
+def compute_rendered_commands(shared_repo: Path, project_root: Path, manifest: dict) -> dict[str, bytes]:
+    """Compute rendered content for the commands target without writing.
+
+    Returns {relative_out_path (posix, relative to project_root): raw bytes}.
+    """
+    shared = manifest.get("shared")
+    shared_commands_dir = shared_repo / COMMANDS_SUBDIR
+    source_paths = sorted(shared_commands_dir.glob("*.md"))
+
+    commands_out = get_commands_out_config(manifest)
+    out_dir_rel = Path(commands_out["dir"])
+
+    result: dict[str, bytes] = {}
+    for source_path in source_paths:
+        name = source_path.stem
+        dest_rel = (out_dir_rel / f"{name}.md").as_posix()
+        result[dest_rel] = render_one_skill_or_command_file(
+            source_path, shared_commands_dir, shared=shared, rel_prefix="commands"
+        )
+
+    return result
+
+
 def check_only(shared_repo: Path, project_root: Path, manifest: dict, targets: list[str]) -> int:
     """Render everything in-memory, compare against what's on disk, print
     clean/dirty lists. Returns 0 if all clean, 1 if anything is dirty.
@@ -430,6 +649,32 @@ def check_only(shared_repo: Path, project_root: Path, manifest: dict, targets: l
         if target not in targets:
             continue
         rendered = compute_rendered_extra_target(shared_repo, target)
+        for rel_path, expected_bytes in sorted(rendered.items()):
+            disk_path = project_root / Path(rel_path)
+            if not disk_path.is_file():
+                dirty.append(rel_path)
+                continue
+            actual_bytes = disk_path.read_bytes()
+            if actual_bytes == expected_bytes:
+                clean.append(rel_path)
+            else:
+                dirty.append(rel_path)
+
+    if "skills" in targets:
+        rendered = compute_rendered_skills(shared_repo, project_root, manifest)
+        for rel_path, expected_bytes in sorted(rendered.items()):
+            disk_path = project_root / Path(rel_path)
+            if not disk_path.is_file():
+                dirty.append(rel_path)
+                continue
+            actual_bytes = disk_path.read_bytes()
+            if actual_bytes == expected_bytes:
+                clean.append(rel_path)
+            else:
+                dirty.append(rel_path)
+
+    if "commands" in targets:
+        rendered = compute_rendered_commands(shared_repo, project_root, manifest)
         for rel_path, expected_bytes in sorted(rendered.items()):
             disk_path = project_root / Path(rel_path)
             if not disk_path.is_file():
@@ -527,16 +772,28 @@ def main(argv: list[str] | None = None) -> int:
         return exit_code
 
     rules_count = 0
+    extra_target_tokens: list[str] = []
     try:
         if "rules" in targets:
             rendered_names = render_rules(SHARED_REPO_ROOT, project_root, manifest)
             rules_count = len(rendered_names)
             print(f"Rendered {rules_count} rule(s) into project.")
 
-        extra_targets = [t for t in targets if t != "rules"]
-        for target in extra_targets:
-            written = render_extra_target(SHARED_REPO_ROOT, project_root, target)
-            print(f"Copied {len(written)} file(s) for target '{target}'.")
+        for target in targets:
+            if target == "rules":
+                continue
+            if target == "skills":
+                rendered = render_skills(SHARED_REPO_ROOT, project_root, manifest)
+                print(f"Rendered {len(rendered)} skill(s) into project.")
+                extra_target_tokens.append(f"skills={len(rendered)}")
+            elif target == "commands":
+                rendered = render_commands(SHARED_REPO_ROOT, project_root, manifest)
+                print(f"Rendered {len(rendered)} command(s) into project.")
+                extra_target_tokens.append(f"commands={len(rendered)}")
+            else:
+                written = render_extra_target(SHARED_REPO_ROOT, project_root, target)
+                print(f"Copied {len(written)} file(s) for target '{target}'.")
+                extra_target_tokens.append(target)
     except StackRenderError as exc:
         print(f"ERR: {exc}")
         return 1
@@ -544,7 +801,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERR: filesystem error: {exc}")
         return 1
 
-    extra_targets_str = ",".join(t for t in targets if t != "rules")
+    extra_targets_str = ",".join(extra_target_tokens)
     print(
         f"STACK_RENDER_OK project={project_name} rules={rules_count} "
         f"extra_targets={extra_targets_str}"
