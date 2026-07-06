@@ -66,8 +66,10 @@ DEFAULT_COMMANDS_OUT_DIR = "agent-stack/commands"
 # render_claude_wrapper() (read-only reference, not modified by this port).
 # Behavior-preservation target: for a manifest whose adapters config points at
 # Oathboard's existing skills_out/commands_out dirs, this generator must
-# reproduce Oathboard's current .claude/.codex wrapper files byte-for-byte
-# (GENERATED header wording aside — see ADAPTER_WRAPPER_STYLES["oathboard"]).
+# reproduce Oathboard's current .claude/.codex wrapper files (byte-identical
+# after newline normalization — this renderer writes LF like every other
+# rendered output, while check_stack.py's write_text produced CRLF on
+# Windows). Node shape is documented in MANIFEST-SCHEMA.md §Adapters.
 
 DEFAULT_CLAUDE_SKILLS_DIR = ".claude/skills"
 DEFAULT_CODEX_SKILLS_DIR = ".codex/skills"
@@ -83,7 +85,6 @@ def get_adapters_config(manifest: dict) -> dict | None:
         "claude_skills_dir": adapters.get("claude_skills_dir", DEFAULT_CLAUDE_SKILLS_DIR),
         "codex_skills_dir": adapters.get("codex_skills_dir", DEFAULT_CODEX_SKILLS_DIR),
         "codex_commands_dir": adapters.get("codex_commands_dir", DEFAULT_CODEX_COMMANDS_DIR),
-        "wrapper_style": adapters.get("wrapper_style", "oathboard"),
         "project_name": adapters.get("project_name"),
     }
 

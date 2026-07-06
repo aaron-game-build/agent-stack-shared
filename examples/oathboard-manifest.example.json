@@ -6,7 +6,7 @@
       "AUDIT_Q2_TARGET": "`current-validation-lock.md`",
       "KB_ROOT": "../../Docs/agent-knowledge",
       "CODEGRAPH_PROJECT_PATH": "C:/path/to/Oathboard",
-      "CODEGRAPH_PATH_FALLBACK": "C:\\Users\\jzd94\\AppData\\Roaming\\npm\\codegraph.cmd",
+      "CODEGRAPH_PATH_FALLBACK": "C:/path/to/npm/codegraph.cmd",
       "UTF8_MARKERS_TOOL": "oath_utf8_markers.py",
       "KB_ENTRY_PATH": "../../../Docs/agent-knowledge/knowledge-base-entry.md",
       "UE_PY_RUN_SCRIPT_PATH": "agent-stack/skills/ue-py-run/scripts/ue_python.py",
@@ -15,7 +15,7 @@
       "PY_OPS_ARCHITECTURE_DOC": "knowledge-base-entry.md",
       "UE_PY_EVOLVE_SCRIPTS_DIR": "agent-stack/skills/ue-py-evolve/scripts",
       "PROJECT_ROOT": "C:/path/to/Oathboard",
-      "ENGINE_ROOT": "G:/UnrealEngine/UE_5.7/Engine",
+      "ENGINE_ROOT": "C:/path/to/UnrealEngine/UE_5.7/Engine",
       "PROJECT_NAME": "Oathboard",
       "BUILD_WORKFLOW_DOC": "Docs/validation/static-validation-index.md",
       "BUILD_LAUNCH_SCRIPT": "Build-And-Launch.ps1",
@@ -64,7 +64,13 @@
       "pylib",
       "skills",
       "commands"
-    ]
+    ],
+    "adapters": {
+      "project_name": "Oathboard",
+      "claude_skills_dir": ".claude/skills",
+      "codex_skills_dir": ".codex/skills",
+      "codex_commands_dir": ".codex/commands"
+    }
   },
   "skills": [
     "ue-py-run",

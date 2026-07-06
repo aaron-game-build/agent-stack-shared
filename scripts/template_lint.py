@@ -6,8 +6,10 @@ Mechanizes the checkable subset of the Template Authoring Rules (README):
    every {{KEY}} / {{SLOT:KEY}} / OPTIONAL:KEY used in a template is documented
    in the schema, and every ALL-CAPS key documented in the schema is used by
    some template (whitelist below for intentional exceptions).
-3. Render smoke: every manifest under examples/ renders fully into a temp
-   directory with zero leftover placeholders (stack_render hard-errors on those).
+3. Render smoke: every manifest under examples/ is rendered fully IN MEMORY
+   (rules + skills + commands + sdd/tdd/pylib + adapter wrappers if the
+   manifest configures them) with an explicit zero-leftover-placeholder
+   assertion. Nothing is written to disk.
 
 No third-party dependencies. Exit 0 with a TEMPLATE_LINT_OK token, exit 1 with
 per-violation lines otherwise.
@@ -17,16 +19,16 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE_DIRS = [ROOT / "rules", ROOT / "skills", ROOT / "commands"]
 SCHEMA = ROOT / "MANIFEST-SCHEMA.md"
 EXAMPLES = ROOT / "examples"
-RENDERER = ROOT / "scripts" / "stack_render.py"
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import stack_render  # noqa: E402
 
 PARAM_RE = re.compile(r"\{\{([A-Z][A-Z0-9_]*)\}\}")
 SLOT_RE = re.compile(r"\{\{SLOT:([A-Z][A-Z0-9_]*)\}\}")
@@ -52,25 +54,38 @@ def iter_template_files() -> list[Path]:
 
 
 def check_optional_balance(path: Path, text: str, errors: list[str]) -> None:
-    stack: list[str] = []
+    """BEGIN/END must pair up with no nesting and no crossing. Nesting is
+    rejected outright (not just crossing): the renderer's non-greedy
+    `BEGIN:K ... END:K` regex does not understand block structure, so a
+    nested block either loses its content silently (outer key omitted) or
+    leaves stray markers (outer key kept)."""
+    rel = path.relative_to(ROOT)
+    open_key: str | None = None
+    open_line = 0
     for i, line in enumerate(text.splitlines(), 1):
         b = OPT_BEGIN_RE.search(line)
         e = OPT_END_RE.search(line)
         if b:
-            stack.append(b.group(1))
-        if e:
-            if not stack:
-                errors.append(f"{path.relative_to(ROOT)}:{i}: END OPTIONAL:{e.group(1)} without BEGIN")
-            elif stack[-1] != e.group(1):
+            if open_key is not None:
                 errors.append(
-                    f"{path.relative_to(ROOT)}:{i}: crossing OPTIONAL blocks "
-                    f"(END {e.group(1)} while inside {stack[-1]})"
+                    f"{rel}:{i}: BEGIN OPTIONAL:{b.group(1)} while OPTIONAL:{open_key} "
+                    f"(line {open_line}) is still open — blocks must not nest or cross"
                 )
-                stack.pop()
+            open_key = b.group(1)
+            open_line = i
+        if e:
+            if open_key is None:
+                errors.append(f"{rel}:{i}: END OPTIONAL:{e.group(1)} without BEGIN")
+            elif open_key != e.group(1):
+                errors.append(
+                    f"{rel}:{i}: crossing OPTIONAL blocks "
+                    f"(END {e.group(1)} while inside {open_key})"
+                )
+                open_key = None
             else:
-                stack.pop()
-    for leftover in stack:
-        errors.append(f"{path.relative_to(ROOT)}: BEGIN OPTIONAL:{leftover} never closed")
+                open_key = None
+    if open_key is not None:
+        errors.append(f"{rel}: BEGIN OPTIONAL:{open_key} (line {open_line}) never closed")
 
 
 def collect_template_keys(files: list[Path], errors: list[str]) -> set[str]:
@@ -100,22 +115,66 @@ def collect_schema_keys() -> set[str]:
 
 
 def render_smoke(errors: list[str]) -> int:
+    """Render every example manifest fully in memory via stack_render's
+    compute_* functions — no subprocess, nothing written to disk — and assert
+    zero leftover `{{` in every rendered .md."""
     count = 0
     if not EXAMPLES.is_dir():
         errors.append("examples/ directory missing (render smoke has nothing to run)")
         return 0
-    for manifest in sorted(EXAMPLES.glob("*.json")):
+    fake_project_root = ROOT / "_lint_smoke_project"  # path is never written to
+    for manifest_path in sorted(EXAMPLES.glob("*.json")):
         count += 1
-        with tempfile.TemporaryDirectory(prefix="stack-lint-") as tmp:
-            result = subprocess.run(
-                [sys.executable, str(RENDERER), "--project", tmp, "--manifest", str(manifest)],
-                capture_output=True,
-                text=True,
-            )
-            if result.returncode != 0:
-                errors.append(
-                    f"render smoke failed for {manifest.name}:\n{result.stdout}\n{result.stderr}"
+        name = manifest_path.name
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            errors.append(f"{name}: invalid JSON: {exc}")
+            continue
+        if not manifest.get("shared"):
+            errors.append(f"{name}: no 'shared' node")
+            continue
+
+        rendered: dict[str, object] = {}
+        try:
+            targets = stack_render.parse_targets(manifest)
+            if "rules" in targets:
+                rendered.update(
+                    stack_render.compute_rendered_rules(ROOT, fake_project_root, manifest)
                 )
+            if "skills" in targets:
+                rendered.update(
+                    stack_render.compute_rendered_skills(ROOT, fake_project_root, manifest)
+                )
+            if "commands" in targets:
+                rendered.update(
+                    stack_render.compute_rendered_commands(ROOT, fake_project_root, manifest)
+                )
+            for target in ("sdd", "tdd", "pylib"):
+                if target in targets:
+                    rendered.update(stack_render.compute_rendered_extra_target(ROOT, target))
+            adapters_cfg = stack_render.get_adapters_config(manifest)
+            if adapters_cfg is not None:
+                rendered.update(
+                    stack_render.compute_adapter_wrappers(fake_project_root, manifest, adapters_cfg)
+                )
+        except stack_render.StackRenderError as exc:
+            errors.append(f"render smoke failed for {name}: {exc}")
+            continue
+
+        if not rendered:
+            errors.append(f"{name}: rendered zero files — targets misconfigured?")
+            continue
+
+        for out_path, content in sorted(rendered.items()):
+            if isinstance(content, bytes):
+                if not out_path.endswith(".md"):
+                    continue  # byte-copied asset (scripts, csv, ...), no placeholders expected
+                text = content.decode("utf-8", "replace")
+            else:
+                text = content
+            if "{{" in text:
+                errors.append(f"{name}: leftover '{{{{' in rendered {out_path}")
     return count
 
 
