@@ -102,9 +102,9 @@ KB：[ue-visual-debug-primitives.md](../../../docs/ue-agent-knowledge/concepts/u
 
 
 
-参考实现（源项目 MR）：`UMRAbilityDebugDrawComponent` + `UMRAbilityDebugLibrary::DrawGroundRangeCircle`。端到端：MR `docs/ue-agent-knowledge/modules/gas-combat-debug.md` §端到端。
-
-**多状态调试配色示例（源项目 MR 的 CombatRoom 五色）**（仍用 DrawDebug，`Duration=0` 持续态 + 事件闪）：蓝=常态/格挡圈；黄=敌人 InRange Capsule + 技能激活脚底圈；红=命中/受伤 Capsule 闪；绿=格挡成功闪。详见 MR `docs/ue-agent-knowledge/modules/gas-combat-debug.md` §战斗 Debug 色彩语义。
+<!-- BEGIN OPTIONAL:VISUAL_DEBUG_PROJECT_IMPL -->
+{{VISUAL_DEBUG_PROJECT_IMPL}}
+<!-- END OPTIONAL:VISUAL_DEBUG_PROJECT_IMPL -->
 
 
 

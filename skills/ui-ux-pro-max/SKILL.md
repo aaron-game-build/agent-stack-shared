@@ -1,7 +1,6 @@
 # ui-ux-pro-max
 
-> 低频专项 skill：非主线工作流不触发，按需调用。宿主项目若有本地 UI 设计系统 / UI 验证编排文档，
-> 优先走项目文档（例：MR 的 `docs/design/engineering/mr-ui-kit-design-system.md`）。
+> 低频专项 skill：非主线工作流不触发，按需调用。{{SLOT:UIUX_LOCAL_REDIRECT}}
 
 Comprehensive design guide for web and mobile applications. Contains 67 styles, 96 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 13 technology stacks. Searchable database with priority-based recommendations.
 
