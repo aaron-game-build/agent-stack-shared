@@ -90,3 +90,6 @@
 - 结构查询与禁委派细则：[codegraph.md](codegraph.md)。
 - 探针 Carry 门禁：[agent-react.md](agent-react.md)。
 - 主上下文静默 Carry：[agent-output-verbosity.md](agent-output-verbosity.md)。
+<!-- BEGIN OPTIONAL:PROJECT_DELEGATION_NOTES -->
+{{PROJECT_DELEGATION_NOTES}}
+<!-- END OPTIONAL:PROJECT_DELEGATION_NOTES -->

@@ -6,7 +6,7 @@
 
 可并行：只读调研、文档草案、不相交代码/文档（先声明 `claims`，避免公共接口）。Feature worktree 可并行，但 Editor/PIE/资产仍由 local/main 串行。
 
-须串行：{{SLOT:CONCURRENCY_SERIAL_RESOURCES}}、`.uasset/.umap/DataAsset` 保存/移动/删改、Editor 开关、Build、Live Coding、Remote Exec、PIE Play/Stop/probe。Git index/commit/LFS 写入先 claim。
+须串行：{{SLOT:CONCURRENCY_SERIAL_RESOURCES}}、`.uasset/.umap/DataAsset` 保存/移动/删改、Editor 开关、Build、Live Coding、Remote Exec、PIE Play/Stop/probe。Git index/commit/LFS 写入先 claim{{SLOT:GIT_CLAIM_TOOL_NOTE}}。
 
 跨界协作先定 owner。
 

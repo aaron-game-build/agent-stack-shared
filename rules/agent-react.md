@@ -28,13 +28,16 @@ L1–L4/H：{{SLOT:QUALITY_GATES_LINKS}}。
 Protected Contract：改到受保护依赖路径时，Carry 前声明影响半径；Test 前跑/请求 L3 证据包。详见 {{PROTECTED_CONTRACTS_REFS}}。
 <!-- END OPTIONAL:PROTECTED_CONTRACTS -->
 
-Escaped Bug：用户可见 bug/回归/L3-L4 不足/追问"为什么没拦住"时，不得只写"已修复"。按 [incident-to-guardrail-retrospective.md]({{KB_ROOT}}/modules/incident-to-guardrail-retrospective.md) 做五层分析。
+Escaped Bug：用户可见 bug/回归/L3-L4 不足/追问"为什么没拦住"时，不得只写"已修复"。按 [incident-to-guardrail-retrospective.md]({{KB_ROOT}}/modules/incident-to-guardrail-retrospective.md) 做五层分析，失败层路由到 rule/framework/probe/evidence/KB。
 
 ## Test / 禁止
 
 - `ue_python.py` exit 0（Editor 任务）；C++ 关 Editor Build；PIE **Play** 不能省略。
 - L4/H 需独占 editor 时标阻塞，不得静默跳过。
 - 禁止：跳过 Test；L4 未过宣称完成；静态绿 token 代替人玩结论。
+<!-- BEGIN OPTIONAL:PROJECT_TEST_NOTES -->
+- {{PROJECT_TEST_NOTES}}
+<!-- END OPTIONAL:PROJECT_TEST_NOTES -->
 
 | 模式 | REACT |
 |------|-------|

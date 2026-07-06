@@ -35,6 +35,12 @@
 
 **Goal 标准变更**：若用户中途收窄或放宽完成标准，Agent 必须显式复述旧标准、新标准和残余验收；可以按新标准完成，但不得把旧标准静默写成已完成。
 
+<!-- BEGIN OPTIONAL:PROJECT_DIRECTION_LOCKS -->
+**项目方向锁**（已认可的项目级默认方案，未经用户确认不得改换）：
+
+{{PROJECT_DIRECTION_LOCKS}}
+<!-- END OPTIONAL:PROJECT_DIRECTION_LOCKS -->
+
 ## §3 BLOCKED 协议
 
 满足任一即 BLOCKED（同一绕路最多 2 次后必须停）：Editor 失败且无备选；同一假设修 2 次仍不满足验收；Plan 前提错误且未覆盖。
