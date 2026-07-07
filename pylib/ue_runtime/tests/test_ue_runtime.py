@@ -1895,5 +1895,35 @@ def _run_installed_powershell(target_root, bootstrap_script, *args):
     )
 
 
+class LinkedConsumptionAuditTests(unittest.TestCase):
+    def test_install_audit_accepts_linked_submodule_consumption(self):
+        import shutil
+        import tempfile
+
+        import ue_runtime
+        from ue_runtime.install_audit import audit_runtime_install
+
+        src = Path(ue_runtime.__file__).resolve().parent
+        with tempfile.TemporaryDirectory() as tmp:
+            linked = Path(tmp) / "agent-stack-shared" / "pylib" / "ue_runtime"
+            linked.mkdir(parents=True)
+            for f in src.glob("*.py"):
+                shutil.copy2(f, linked / f.name)
+            report = audit_runtime_install(tmp)
+            self.assertEqual("linked", report["mode"])
+            self.assertTrue(report["ok"], report["issues"][:3])
+            self.assertEqual(0, report["issue_count"])
+
+    def test_install_audit_still_flags_missing_runtime(self):
+        import tempfile
+
+        from ue_runtime.install_audit import audit_runtime_install
+
+        with tempfile.TemporaryDirectory() as tmp:
+            report = audit_runtime_install(tmp)
+            self.assertEqual("vendored", report["mode"])
+            self.assertFalse(report["ok"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -15,10 +15,24 @@ from ue_runtime.package import build_package_manifest
 
 INSTALL_AUDIT_SCHEMA_VERSION = "ue-task-runtime-install-audit/v1"
 
+# Submodule-linked consumption layout (primary channel; see shared README
+# "Runtime distribution channels"). Vendored copies use package runtime_path.
+LINKED_RUNTIME_PATH = "agent-stack-shared/pylib/ue_runtime"
+
+
+def _detect_consumption_mode(target_root, package):
+    vendored_path = package.get("runtime_path", "Content/Python/ue_runtime")
+    if (target_root / vendored_path).is_dir():
+        return "vendored", vendored_path
+    if (target_root / LINKED_RUNTIME_PATH).is_dir():
+        return "linked", LINKED_RUNTIME_PATH
+    return "vendored", vendored_path
+
 
 def audit_runtime_install(target_root, package_manifest=None):
     target_root = Path(target_root).resolve()
     package = package_manifest or build_package_manifest()
+    mode, runtime_path = _detect_consumption_mode(target_root, package)
     expected = {
         record["path"]: record
         for record in package.get("files", [])
@@ -26,9 +40,14 @@ def audit_runtime_install(target_root, package_manifest=None):
     issues = []
     checked = 0
 
+    def _target_for(rel_path):
+        if mode == "linked":
+            return target_root / LINKED_RUNTIME_PATH / Path(rel_path).name
+        return target_root / rel_path
+
     for rel_path, record in sorted(expected.items()):
         checked += 1
-        target = target_root / rel_path
+        target = _target_for(rel_path)
         if not target.exists():
             issues.append(_issue("missing_file", "missing runtime file: %s" % rel_path, rel_path))
             continue
@@ -47,14 +66,15 @@ def audit_runtime_install(target_root, package_manifest=None):
         if expected_sha and actual_sha != expected_sha:
             issues.append(_issue("sha256_mismatch", "sha256 mismatch: %s" % rel_path, rel_path))
 
-    runtime_path = package.get("runtime_path", "Content/Python/ue_runtime")
     runtime_root = target_root / runtime_path
     if not runtime_root.exists():
         issues.append(_issue("runtime_dir_missing", "runtime directory missing: %s" % runtime_path, runtime_path))
     elif runtime_root.is_dir():
+        expected_names = {Path(rel).name for rel in expected}
         for path in sorted(runtime_root.glob("*.py")):
             rel_path = _relative_project_path(target_root, path)
-            if rel_path not in expected:
+            known = rel_path in expected if mode == "vendored" else path.name in expected_names
+            if not known:
                 issues.append(_issue("extra_runtime_file", "extra runtime file: %s" % rel_path, rel_path))
     else:
         issues.append(_issue("runtime_dir_not_directory", "runtime path is not a directory: %s" % runtime_path, runtime_path))
@@ -87,6 +107,8 @@ def audit_runtime_install(target_root, package_manifest=None):
     return {
         "schema_version": INSTALL_AUDIT_SCHEMA_VERSION,
         "ok": not issues,
+        "mode": mode,
+        "runtime_root": runtime_path,
         "target_root": str(target_root),
         "package": {
             "schema_version": package.get("schema_version"),
