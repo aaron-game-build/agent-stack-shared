@@ -42,7 +42,7 @@ Content/Python/
 └── probes/            # L4 runtime
 ```
 
-Framework code lives in `agent-stack/pylib/sdd_tdd/` — no `unreal` import.
+Framework code lives in `pylib/sdd_tdd/` — no `unreal` import.
 
 ## Docs
 

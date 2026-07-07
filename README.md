@@ -20,7 +20,7 @@ delegation/cost discipline, Chinese-doc encoding safety).
   `mr-ui-localization`, `roguelike-learning`; Oathboard's Gate 0 specifics).
 - `Docs/agent-knowledge/` (or `docs/ue-agent-knowledge/` on MR) — the actual KB detail content
   that shared rules link out to via `{{KB_ROOT}}`.
-- The local `agent-stack/manifest.json` — project name, repo path, KB root, and all
+- The local `.cursor/stack-manifest.json` — project name, repo path, KB root, and all
   `params`/`slots`/`optional` values that fill in this repo's placeholders (see
   `MANIFEST-SCHEMA.md`).
 
@@ -63,34 +63,23 @@ Full key-by-key semantics and current Oathboard/MR values: `MANIFEST-SCHEMA.md`.
 ## Sync workflow: `--pull` / `--push`
 
 The unified renderer is `scripts/stack_render.py` in this repo; each consuming project calls it
-via a thin wrapper (Oathboard `check_stack.py --pull/--push`, MR `scripts/stack_pull.py`):
+via a thin wrapper (`Scripts/stack_pull.py` on Oathboard, `scripts/stack_pull.py` on MR):
 
-- **`--pull`**: read `rules/*.md` from this shared repo, render placeholders using the
-  project's local `agent-stack/manifest.json` `shared` node, write the rendered output into the
-  project's `agent-stack/rules/`, then trigger the project's existing `--sync` to regenerate
-  Cursor/Codex/Claude adapters. Rendered files get a header:
-  `<!-- GENERATED from agent-stack-shared; edit there, not here -->`. Any leftover `{{` after
-  rendering is a hard error.
-- **`--push`** (deliberately conservative): **does not** auto-write back to this shared repo.
-  It re-renders in memory and diffs against the project's files. With `--explain`, each dirty
-  line is attributed to its origin: inside a slot/param render region → `HINT: change manifest
-  slots.X`; in fixed template text → `HINT: edit agent-stack-shared/<file>`. A human then makes
-  the edit in the right place. No automatic reverse-rendering.
-- **Adapter emission**: a project that sets the manifest `shared.adapters` node gets its
-  `.claude/skills/` and `.codex/` thin wrappers generated directly by the renderer (ported
-  byte-identical from Oathboard's former `check_stack.py --sync`); projects without the node are
-  unaffected. See MANIFEST-SCHEMA §Adapters.
-
-Once a project adopts `--pull`, its local `agent-stack/rules/` stops being hand-edited canonical
-content — the Drift Rule in that project's `CLAUDE.md`/`AGENTS.md` needs a one-line update to say
-so.
+- **`stack_pull.py`**: read templates from this shared repo (submodule), render placeholders using
+  the project's `.cursor/stack-manifest.json` `shared` node, write into `.cursor/rules|skills|commands`
+  (and optionally generate `.claude`/`.codex` adapters when `shared.adapters` is set). Rendered
+  files get a header: `<!-- GENERATED from agent-stack-shared; edit there, not here -->`. Any leftover
+  `{{` after rendering is a hard error.
+- **`stack_pull.py --check-only`**: in-memory render + diff against disk; exit 1 if dirty (used in CI).
+- **SDD/TDD/pylib**: consumed directly from the submodule (`agent-stack-shared/sdd|tdd|pylib`); not
+  copied into a project-local `agent-stack/` tree.
 
 ## Integration status
 
 | Project | Consumption | Status |
 |---|---|---|
-| Oathboard | `agent-stack/scripts/check_stack.py --pull` (manifest: `agent-stack/manifest.json`) → renders rules/sdd/tdd/pylib/skills/commands into `agent-stack/`, then `--sync` generates Cursor/Codex/Claude adapters | **Live** (rules since 2026-07-06, skills/commands since batch 2) |
-| MyRoguelikeGame | `scripts/stack_pull.py` (manifest: `.cursor/stack-manifest.json`, `format: mdc` + `ue-` name map) → renders directly into `.cursor/rules|skills|commands` | **Live** (rules merged to main 2026-07-06, skills/commands 2026-07-07) |
+| Oathboard | `Scripts/stack_pull.py` (manifest: `.cursor/stack-manifest.json`) → renders rules/skills/commands into `.cursor/` + adapters; sdd/tdd/pylib read from submodule | **Live** |
+| MyRoguelikeGame | `scripts/stack_pull.py` (manifest: `.cursor/stack-manifest.json`, `ue-` name map) → renders into `.cursor/rules|skills|commands` | **Live** |
 
 ## Template Authoring Rules (paid-for lessons — follow when editing this repo)
 

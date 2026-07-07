@@ -2,7 +2,7 @@
 
 This document describes every placeholder key used across `rules/*.md` in this shared
 repository, and how a consuming project supplies values for them via the `shared` node in its
-local `agent-stack/manifest.json`.
+local `.cursor/stack-manifest.json`.
 
 ## Placeholder syntax (v1)
 
@@ -14,7 +14,7 @@ local `agent-stack/manifest.json`.
 
 After rendering, any leftover `{{` in the output is a hard error (missing key).
 
-## `shared` node shape (project-side `agent-stack/manifest.json`)
+## `shared` node shape (project-side `.cursor/stack-manifest.json`)
 
 ```json
 {
@@ -71,12 +71,9 @@ After rendering, any leftover `{{` in the output is a hard error (missing key).
 
 ## Notes
 
-- All Oathboard values above are the actual current values already present in
-  `agent-stack/rules/*.md` at the time this seed was written (2026-07-06).
-- All MR values are marked **draft**: they are extracted from `.cursor/rules/*.mdc` for
-  reference, but MR has not yet migrated to `--pull` mode, so these are not live/consumed
-  anywhere yet — they exist to make `oathboard-manifest-shared-draft.json`'s sibling (an
-  eventual `myroguelikegame-manifest-shared-draft.json`) easy to produce later.
+- All Oathboard values above are the actual current values in `.cursor/stack-manifest.json`
+  (post-2026-07-07 symmetric migration; no project-local `agent-stack/` tree).
+- All MR values are **live** in `.cursor/stack-manifest.json` since 2026-07-07.
 - Keys with no current Oathboard value are called out explicitly above so integration doesn't
   silently drop a placeholder — those need a decision at Oathboard `--pull` time, not a guess
   baked into this schema doc.
@@ -95,14 +92,14 @@ extension has a ready-made key list. Same three-mechanism convention as above (`
 
 | Key | Used in | Semantics | Oathboard value | MR value (draft) |
 |---|---|---|---|---|
-| `KB_ENTRY_PATH` | ue-py-run, ue-doc-audit | Relative link to the project's `knowledge-base-entry.md` from inside `agent-stack/skills/<name>/SKILL.md` | `../../../Docs/agent-knowledge/knowledge-base-entry.md` | `../../../docs/ue-agent-knowledge/knowledge-base-entry.md` (draft) |
+| `KB_ENTRY_PATH` | ue-py-run, ue-doc-audit | Relative link to the project's `knowledge-base-entry.md` from inside `.cursor/skills/<name>/SKILL.md` | `../../../Docs/agent-knowledge/knowledge-base-entry.md` | `mdc:docs/ue-agent-knowledge/knowledge-base-entry.md` |
 | `KB_ROOT_FROM_SKILLS` / `KB_ROOT_FROM_PROJECT` | ue-py-init, ue-py-evolve, ue-doc-audit, ue-task-retrospective | Skills templates use the two split params (see the Params table above) — link contexts take `KB_ROOT_FROM_SKILLS`, plain-path/JSON contexts take `KB_ROOT_FROM_PROJECT`. The former single `KB_ROOT` reuse documented here was the design flaw fixed in 6f56135 | see Params table | see Params table |
 | `UIUX_LOCAL_REDIRECT` (slot) | ui-ux-pro-max | Trailing sentence of the header note redirecting local UI work to project docs — or a generic fallback sentence | `宿主项目若有本地 UI 设计系统文档，优先走项目文档。` | MR original two-doc redirect (mr-ui-kit-design-system.md + ui-validation-orchestration.md) |
-| `UE_PY_RUN_SCRIPT_PATH` | ue-py-init | Path to the `ue_python.py` runner written into `.ue-py-config.json`'s `ue_python_script` field | `agent-stack/skills/ue-py-run/scripts/ue_python.py` | `.cursor/skills/ue-py-run/scripts/ue_python.py` (draft) |
-| `SYNC_WRAPPERS_COMMAND` | ue-py-init (optional block), ue-doc-audit (skill + command, optional block) | Exact command to regenerate Cursor/Codex/Claude adapter wrappers after a canonical edit | `python agent-stack/scripts/check_stack.py --sync` | not applicable yet — MR has no `--sync` producer until it migrates off hand-edited `.cursor/` (draft: TBD) |
+| `UE_PY_RUN_SCRIPT_PATH` | ue-py-init | Path to the `ue_python.py` runner written into `.ue-py-config.json`'s `ue_python_script` field | `.cursor/skills/ue-py-run/scripts/ue_python.py` | `.cursor/skills/ue-py-run/scripts/ue_python.py` |
+| `SYNC_WRAPPERS_COMMAND` | ue-py-init (optional block), ue-doc-audit (skill + command, optional block) | Exact command to regenerate Cursor/Codex/Claude adapter wrappers after a canonical edit | `python Scripts/stack_pull.py` | `python scripts/stack_pull.py` |
 | `PY_OPS_PACKAGE` | ue-py-evolve | Name of the project's promoted-Python-ops package under `Content/Python/` (Phase B target) | `oath_ops` | `mr_ops` (draft) |
 | `PY_OPS_ARCHITECTURE_DOC` | ue-py-evolve | Filename (under `{{KB_ROOT}}/modules/`) of the ops-architecture index doc that Phase B promotions must update | not yet named (Oathboard has no equivalent doc today; candidate name TBD) | `python-ops-architecture.md` (draft) |
-| `UE_PY_EVOLVE_SCRIPTS_DIR` | ue-py-evolve, ue-doc-audit (skill + command) | Path to the `ue-py-evolve` skill's `scripts/` dir, containing `knowledge_graph_check.py` / `agent_stack_check.py` | `agent-stack/skills/ue-py-evolve/scripts` | `.cursor/skills/ue-py-evolve/scripts` (draft) |
+| `UE_PY_EVOLVE_SCRIPTS_DIR` | ue-py-evolve, ue-doc-audit (skill + command) | Path to the `ue-py-evolve` skill's `scripts/` dir, containing `knowledge_graph_check.py` / `agent_stack_check.py` | `.cursor/skills/ue-py-evolve/scripts` | `.cursor/skills/ue-py-evolve/scripts` |
 | `PROJECT_ROOT` | ue-doc-audit (command), ue-py-extend | Absolute project root, used in `cd`/compile commands | `G:/UEProjects/Oathboard` | `G:/UEProjects/MyRoguelikeGame` (draft) |
 | `ENGINE_ROOT` | ue-py-extend | Absolute engine root (`Engine/` dir), used in compile commands | `G:/UnrealEngine/UE_5.7/Engine` | draft — same machine, same value until MR pins its own engine build |
 | `PROJECT_NAME` | ue-py-extend | Project short name, used to build `<Project>Editor` target and `.uproject` filename | `Oathboard` | `MyRoguelikeGame` (draft) |
@@ -117,7 +114,7 @@ extension has a ready-made key list. Same three-mechanism convention as above (`
 |---|---|---|---|---|
 | `DOC_AUDIT_TRIGGERS` | ue-doc-audit (skill + command) | "何时必须跑" trigger row(s) for the doc-audit timing table/list | `Gate 0 L4/H 签核前 \| **建议**` | `Phase N L4 通过、roadmap 标完成前 \| **是**` (draft; MR treats this trigger as mandatory rather than advisory) |
 | `DOC_AUDIT_RELATED_LINKS` | ue-doc-audit (skill) | "相关" section trailing link(s) beyond the shared `tagging.md`/KB-entry links | `[static-validation-index.md](../../../Docs/validation/static-validation-index.md)` | none extra beyond KB entry §Agent 规则索引 (draft) |
-| `RETROSPECTIVE_ROUTE_EXTRA_ROWS` | ue-task-retrospective | Project-specific extra Route table rows beyond the five shared categories (SDD/FeatureSpec, probes/TDD, etc.) | `\| SDD / FeatureSpec \| Docs/production/features/ + feature_specs.py \|`<br>`\| 探针 / TDD \| agent-stack/tdd/、Content/Python/probes/、oath_ops/probe_targets.py \|` | GAS/Phase1 asset automation, skill-test-arena, validation-checklist, quality-gates, build-and-launch rows — see MR SKILL.md §3 bullet list (draft, needs condensing into table rows) |
+| `RETROSPECTIVE_ROUTE_EXTRA_ROWS` | ue-task-retrospective | Project-specific extra Route table rows beyond the five shared categories (SDD/FeatureSpec, probes/TDD, etc.) | `\| SDD / FeatureSpec \| Docs/production/features/ + feature_specs.py \|`<br>`\| 探针 / TDD \| agent-stack-shared/tdd/、Content/Python/probes/、oath_ops/probe_targets.py \|` | GAS/Phase1 asset automation, skill-test-arena, validation-checklist, quality-gates, build-and-launch rows |
 | `LONG_TASK_GOVERNANCE_LINK` | ue-task-retrospective (inside OPTIONAL:LONG_TASK_GOVERNANCE) | Optional trailing sentence pointing to a project's own long-task-governance module; may be empty (block is self-contained without it) | empty (Oathboard has no dedicated module yet) | `完整背景见 [long-task-governance-retrospective.md](../../../docs/ue-agent-knowledge/modules/long-task-governance-retrospective.md)。` (draft) |
 | `PYTHON_CONFIG_BOUNDARY_DOC` | ue-python-config (command) | Link text+target for the "automation boundary" doc read at step 1 | not yet named (Oathboard candidate: `static-validation-index.md`) | `[python-gas-asset-limits.md](../../docs/ue-agent-knowledge/concepts/python-gas-asset-limits.md)` (draft) |
 | `BUILD_REPORT_FORMAT` | ue-build-launch, ue-launch-config, ue-python-config | What the agent must report back after running the build/launch/config script (exit codes, tokens, MANUAL items) | `Build exit code、Remote Exec 是否响应、配置脚本是否打印 OATHBOARD_ALL_STATIC_OK` | `Build 是否成功（exit code）、Editor 是否在 180s 内响应 Remote Exec、final_phase1_config.py 输出中的 [OK]/[MANUAL]/[ERR]` (draft) |
@@ -130,7 +127,7 @@ extension has a ready-made key list. Same three-mechanism convention as above (`
 |---|---|---|---|---|
 | `ALREADY_INITIALIZED_GUARD` | ue-py-init | Renders a warning paragraph when the project's `ue-py-init` is mostly for re-init/path-repair on an already-initialized repo, not first-time setup. Slot `ALREADY_INITIALIZED_GUARD_TEXT` carries the actual sentence | Configured — `ALREADY_INITIALIZED_GUARD_TEXT`: `**Oathboard 主仓库已有** \`.ue-py-config.json\` 与 \`Docs/agent-knowledge/\` — 勿覆盖现有 [\`knowledge-base-entry.md\`](../../../Docs/agent-knowledge/knowledge-base-entry.md)。` | Not configured (MR's `ue-py-init` still targets genuine first-time setup; block omitted) |
 | `ALREADY_INITIALIZED_GUARD_TEXT` | ue-py-init (inside the ALREADY_INITIALIZED_GUARD block) | The actual warning sentence rendered by the block; supplied in the `optional` map alongside the block trigger | Configured (see row above for the sentence) | n/a (block omitted) |
-| `SYNC_WRAPPERS_STEP` | ue-py-init, ue-doc-audit (skill + command) | Renders the "同步 agent-stack wrappers" closing step that calls `check_stack.py --sync`, reusing the same `SYNC_WRAPPERS_COMMAND` param inside | Configured — Oathboard already produces Cursor/Codex adapters via `--sync` | Not configured yet — enable once MR migrates to `--pull` and gets its own `--sync` producer |
+| `SYNC_WRAPPERS_STEP` | ue-py-init, ue-doc-audit (skill + command) | Renders the "同步 agent-stack wrappers" closing step that calls `stack_pull.py`, reusing the same `SYNC_WRAPPERS_COMMAND` param inside | Configured — both projects regenerate adapters via `stack_pull.py` | Configured |
 | `FIVE_LAYER_GUARDRAIL` | ue-task-retrospective | Renders the escaped-bug five-layer guardrail addendum (Local Fix Generalization Gate + required output table), deduplicated against the project's own five-layer module (linked via `{{KB_ROOT}}`, not re-defined inline) | Configured — links to `incident-to-guardrail-retrospective.md` (36-line module, already has the five-layer table + required questions + Oathboard examples; this block only adds the increment MR had beyond that: the Generalization Gate + visual-evidence 3-way split + output-table template) | Configured (draft) — MR's own `.cursor/skills/ue-task-retrospective/SKILL.md` originated this content; once MR adopts the shared skill it would link its own five-layer module the same way |
 | `LONG_TASK_GOVERNANCE` | ue-task-retrospective | Renders the long-task governance checklist (scope audit, evidence layering, multi-agent reconciliation, commit scope, residual routing). Self-contained; `{{SLOT:LONG_TASK_GOVERNANCE_LINK}}` may be left empty | Configured — Oathboard has no dedicated module yet, so `LONG_TASK_GOVERNANCE_LINK` renders empty; the checklist itself still applies | Configured (draft) — MR has `long-task-governance-retrospective.md`, so its `LONG_TASK_GOVERNANCE_LINK` would point there |
 | `ESCAPED_BUG_ADDENDUM` | ue-task-retrospective | Renders the closing "generalize before closing" reminder for any escaped bug with a reusable root-cause class | Configured — generic wording, no project-specific content needed | Configured (draft) — same generic wording applies |

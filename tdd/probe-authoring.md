@@ -58,7 +58,7 @@ Project example: Oathboard `Docs/agent-knowledge/concepts/pie-async-probe-orches
 python Content/Python/<project>_project/validate_probe_hygiene.py
 ```
 
-Framework implementation: `agent-stack/pylib/sdd_tdd/probe_hygiene.py`.
+Framework implementation: `pylib/sdd_tdd/probe_hygiene.py`.
 
 ## Authoring Checklist
 
