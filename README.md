@@ -35,8 +35,12 @@ each project keeps its own project-only skills/commands untouched by rendering.
 Oathboard's `oath_project/stack_paths.py`) — it is **not** rendered. Two package classes with
 different CI treatment:
 
-- **UE-light** (e.g. `sdd_tdd`): never imports `unreal`; importable and unit-testable in any
-  plain Python process. Shared CI and consumer static gates run its tests directly.
+- **UE-light** (e.g. `sdd_tdd`, `ue_runtime`): never imports `unreal`; importable and
+  unit-testable in any plain Python process. Shared CI and consumer static gates run its tests
+  directly. `ue_runtime` (promoted from MR's `mr_runtime`) is the task-automation runtime:
+  registry/runner/service/CLI plus scaffold/package/bundle/installer; its own boundary check
+  (`ue_runtime.boundary`) enforces UE-lightness, with project markers supplied per-project via
+  `.ue-py-config.json` `task_runtime.boundary` (manifest-driven, no project names in this repo).
 - **editor-only** (e.g. `ue_probe`): imports `unreal` at module level and runs inside the UE
   Editor Python environment only. Its package `__init__` must stay import-free so unittest
   discovery and non-editor tooling can traverse it; CI coverage comes from stub-injected unit
@@ -49,7 +53,17 @@ project's thin wrapper (e.g. `mr_ops/probe_common.py`, `oath_ops/probe_common.py
 
 **Not shared** (stays in each project's repo): the `*_ops` binding packages themselves, concrete
 `probes/` and `audits/`, `probe_impl` scenario code, domain content suites (e.g. combat
-contracts), and project KB modules. These are project content, not tooling.
+contracts), project task registries (`mr_project`, `oath_project`), and project KB modules.
+These are project content, not tooling.
+
+**Runtime distribution channels** (decided when `ue_runtime` was promoted, to avoid a second
+installer drifting against the stack renderer): the **git submodule is the primary channel** —
+consuming projects import `ue_runtime` from `agent-stack-shared/pylib` via their sys.path shim
+and bind a registry in `.ue-py-config.json` `task_runtime`. The runtime's own
+`package`/`bundle`/`installer` modules are the **secondary, vendored channel** for projects that
+cannot take the submodule (they copy the runtime into `Content/Python/ue_runtime` with sha256
+receipts). `stack_pull.py` owns rules/skills/commands/adapters; the runtime installer owns only
+runtime-binding files — neither writes the other's outputs.
 
 ## Placeholder mechanism (v1)
 
