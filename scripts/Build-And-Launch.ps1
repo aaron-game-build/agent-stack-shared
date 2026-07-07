@@ -133,11 +133,11 @@ function Wait-ProjectEditorExit {
         [int]$TimeoutSeconds = 30
     )
     $elapsed = 0
-    while ((Get-ProjectEditorProcesses -UprojectFileName $UprojectFileName).Count -gt 0 -and $elapsed -lt $TimeoutSeconds) {
+    while (@(Get-ProjectEditorProcesses -UprojectFileName $UprojectFileName).Count -gt 0 -and $elapsed -lt $TimeoutSeconds) {
         Start-Sleep -Seconds 1
         $elapsed++
     }
-    return ((Get-ProjectEditorProcesses -UprojectFileName $UprojectFileName).Count -eq 0)
+    return (@(Get-ProjectEditorProcesses -UprojectFileName $UprojectFileName).Count -eq 0)
 }
 
 # ---------------------------------------------------------------------------
@@ -254,7 +254,9 @@ Write-Host "  Project: $ProjectFile"
 Write-Host ""
 
 # Step 1: Close this project's UE Editor instance(s) only
-$editorProcs = Get-ProjectEditorProcesses -UprojectFileName $UprojectName
+# @() everywhere a process list is counted: PS 5.1 unrolls single-element
+# results to a scalar, and StrictMode then rejects .Count on it.
+$editorProcs = @(Get-ProjectEditorProcesses -UprojectFileName $UprojectName)
 if ($editorProcs.Count -gt 0) {
     Write-Host "[1/4] Closing UnrealEditor gracefully (project: $UprojectName)..."
 
@@ -271,7 +273,7 @@ if ($editorProcs.Count -gt 0) {
         Write-Host "  Remote quit unavailable, fallback to window close."
     }
 
-    foreach ($proc in (Get-ProjectEditorProcesses -UprojectFileName $UprojectName)) {
+    foreach ($proc in @(Get-ProjectEditorProcesses -UprojectFileName $UprojectName)) {
         if ($proc.MainWindowHandle -ne 0) {
             [void]$proc.CloseMainWindow()
         }
@@ -280,7 +282,7 @@ if ($editorProcs.Count -gt 0) {
     $closedGracefully = Wait-ProjectEditorExit -UprojectFileName $UprojectName -TimeoutSeconds 30
     if (-not $closedGracefully -and $ForceKillEditor) {
         Write-Host "[WARN] Editor did not exit gracefully within 30s; forcing shutdown of this project's instance(s) because -ForceKillEditor was provided."
-        Get-ProjectEditorProcesses -UprojectFileName $UprojectName | Stop-Process -Force
+        @(Get-ProjectEditorProcesses -UprojectFileName $UprojectName) | Stop-Process -Force
         $closedGracefully = Wait-ProjectEditorExit -UprojectFileName $UprojectName -TimeoutSeconds 10
     }
 
