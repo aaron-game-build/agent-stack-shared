@@ -43,3 +43,7 @@ jobs:
             $e | ForEach-Object { Write-Error $_.Message }
             exit 1
           }
+
+      - name: Run forbidden marker check
+        shell: bash
+        run: python scripts/forbidden_marker_check.py

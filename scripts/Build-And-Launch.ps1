@@ -33,9 +33,9 @@
     Missing required config keys are still reported as errors.
 
 .EXAMPLE
-    & Build-And-Launch.ps1 -ProjectRoot "G:\UEProjects\Oathboard"
-    & Build-And-Launch.ps1 -ProjectRoot "G:\UEProjects\Oathboard" -SkipBuild
-    & Build-And-Launch.ps1 -ProjectRoot "G:\UEProjects\Oathboard" -DryRun
+    & Build-And-Launch.ps1 -ProjectRoot "X:\Projects\YourProject"
+    & Build-And-Launch.ps1 -ProjectRoot "X:\Projects\YourProject" -SkipBuild
+    & Build-And-Launch.ps1 -ProjectRoot "X:\Projects\YourProject" -DryRun
 #>
 param(
     [Parameter(Mandatory = $true)]
