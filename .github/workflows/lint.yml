@@ -32,3 +32,14 @@ jobs:
       - name: Run pylib unit tests
         shell: bash
         run: python -m unittest discover -s pylib -p "test_*.py"
+
+      - name: Check PowerShell syntax (Build-And-Launch.ps1)
+        shell: pwsh
+        run: |
+          $t = $null
+          $e = $null
+          [System.Management.Automation.Language.Parser]::ParseFile('scripts/Build-And-Launch.ps1', [ref]$t, [ref]$e) | Out-Null
+          if ($e.Count) {
+            $e | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }

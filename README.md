@@ -65,6 +65,20 @@ cannot take the submodule (they copy the runtime into `Content/Python/ue_runtime
 receipts). `stack_pull.py` owns rules/skills/commands/adapters; the runtime installer owns only
 runtime-binding files — neither writes the other's outputs.
 
+## Shared scripts
+
+`scripts/Build-And-Launch.ps1` is the single, config-driven Build-And-Launch pipeline for both
+consuming projects (Oathboard, MyRoguelikeGame). Each project keeps only a 3-6 line root-level
+`Build-And-Launch.ps1` wrapper that resolves the shared script's path under its
+`agent-stack-shared` submodule checkout and forwards `-ProjectRoot $PSScriptRoot @args`. All
+project-specific values (uproject file name, engine root, build command, `ue_python.py` bridge
+path, remote-exec discovery timeout, post-launch editor scripts, post-launch checks and their
+`local`/`editor` execution mode) are read at runtime from the consuming project's own
+`.ue-py-config.json` (`toolchain`, `toolchain.build_launch`, `platforms.windows`) — the shared
+script itself carries zero project-name placeholders and is not part of the `stack_render.py`
+placeholder-rendering pipeline. Run it with `-DryRun` to print the resolved plan without touching
+any running Editor process.
+
 ## Placeholder mechanism (v1)
 
 - `{{KEY}}` — single-value param, inline substitution.
