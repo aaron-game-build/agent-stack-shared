@@ -35,6 +35,8 @@
 
 `run_in_background: true` 时检查 output 文件 `mtime/size` 和完成标记（done/completed/success/ok/pass/result）。无标记 + `mtime>5min` + `size<=512` 常为静默停止；再核验产物目录，无产物则主线接管，且不重复委派同一 subagent。
 
+接管疑似停止的 subagent 前先 SendMessage 探活；确认接管则**显式放弃**原 agent 再动手——API 中断后 agent 可能复活，与主线并行写同一仓库（2026-07-07 实翻一次，`pitfall:NestedDelegationDeadlock` 的姊妹场景）。
+
 ## 5. 大批量写入委派便宜 subagent
 
 多文件 / 机械性写入（文档减重、批量 frontmatter、归档移动、跨文件改链接、多文件重构）

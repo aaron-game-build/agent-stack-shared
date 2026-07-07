@@ -88,7 +88,9 @@ Distilled from the 2026-07-06/07 convergence retrospective (full analysis: Oathb
    examples); a directory rm-then-write deleted six real project files before being caught.
 4. **Every convergence replacement ships with a content-loss audit**: diff old vs rendered, list
    each line that exists in old but not new, and tag it *slotted / superseded / lost* — losses
-   must be reported, never silent. This audit caught every real regression in both projects.
+   must be reported, never silent. This audit caught every real regression in both projects. The
+   audit surface includes the consumer's CI workflow definitions and modes (a strict-mode gate
+   turns soft warnings into a red build — MR's doc-check ran red for a full round this way).
 5. **Generalizing a source project's file for sharing loses that project's specifics on
    re-consumption.** When seeding from a project, wrap its project-specific sentences in slots or
    optional blocks up front (`VISUAL_DEBUG_PROJECT_IMPL`, `UIUX_LOCAL_REDIRECT`), don't rewrite
