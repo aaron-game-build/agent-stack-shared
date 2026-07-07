@@ -29,6 +29,29 @@ batch 2 (see Oathboard's `skills-merge-dossier.md` for the per-item convergence 
 `ue-pie-probe` deliberately stays project-local on both sides (scenario-driven structure), and
 each project keeps its own project-only skills/commands untouched by rendering.
 
+## Maintenance mode & change policy
+
+As of 2026-07-07 the shared layer is **feature-frozen**. The structural work (rules/skills/commands
+rendering, pylib layering, task runtime, shared Build-And-Launch) is done; what remains is
+consumption. Changes are accepted only when:
+
+1. **Reactively triggered** — a retrospective, escaped bug, or recorded pitfall shows a concrete
+   failure this layer should prevent (evidence required, not speculation);
+2. **Onboarding-driven** — a new consuming project needs a binding the placeholder/manifest/config
+   mechanisms cannot express yet;
+3. **Safety/CI** — sanitization, lint, or test-infrastructure fixes.
+
+Speculative generalization ("a third project might want this someday") is rejected by default.
+When in doubt, record the idea in the active project's tech-debt register with a revisit trigger
+instead of changing this repo.
+
+**Supported UE version: 5.7.** The UE-version-sensitive surfaces are: the remote-execution UDP
+multicast protocol used by the `ue_python.py` bridge and `scripts/Build-And-Launch.ps1` readiness
+probing; `unreal` Python API calls in `pylib/ue_probe` (including the triple-fallback
+`get_game_instance_subsystem`); and editor lifecycle behavior assumed by post-launch scripts. On
+an engine upgrade, audit those first — do not assume green CI here implies editor compatibility
+(shared CI never runs inside the editor).
+
 ## pylib layering (UE-light vs editor-only)
 
 `pylib/` is consumed directly from the submodule via a sys.path shim in each project (e.g.
@@ -88,7 +111,7 @@ any running Editor process.
 
 Full key-by-key semantics and current Oathboard/MR values: `MANIFEST-SCHEMA.md`.
 
-## Sync workflow: `--pull` / `--push`
+## Sync workflow: `stack_pull.py`
 
 The unified renderer is `scripts/stack_render.py` in this repo; each consuming project calls it
 via a thin wrapper (`Scripts/stack_pull.py` on Oathboard, `scripts/stack_pull.py` on MR):

@@ -19,7 +19,7 @@ After rendering, any leftover `{{` in the output is a hard error (missing key).
 ```json
 {
   "shared": {
-    "repo": "G:/UEProjects/agent-stack-shared",
+    "repo": "agent-stack-shared",
     "params": { "KEY": "value" },
     "slots": { "KEY": "multi-line\ntext" },
     "optional": { "KEY": "value or block-trigger content" }
@@ -35,8 +35,8 @@ After rendering, any leftover `{{` in the output is a hard error (missing key).
 | `KB_ROOT` | agent-react.md, human-validation-handoff.md, agent-doc-safety.md (link), commands/ue-doc-audit.md | KB root for **markdown links as seen from rules/commands output** (2 levels deep in Oathboard; `mdc:` scheme in MR is depth-independent) | `../../Docs/agent-knowledge` | `mdc:docs/ue-agent-knowledge` |
 | `KB_ROOT_FROM_SKILLS` | skills/* SKILL.md link contexts | KB root for **markdown links as seen from skills output** (3 levels deep: `<skills_dir>/<name>/SKILL.md`). Split from KB_ROOT after Oathboard's rendered skill links were found silently broken (2-deep value used at 3-deep location) | `../../../Docs/agent-knowledge` | `mdc:docs/ue-agent-knowledge` (draft) |
 | `KB_ROOT_FROM_PROJECT` | agent-doc-safety.md (grep), ue-py-init (dir layout + JSON config values), ue-py-evolve (dir tree, path rule), ue-task-retrospective (read/route plain paths) | KB root as a **plain project-root-relative path** (no `../`, no link scheme) — for JSON values written to root-level config, grep instructions, and route-destination tables | `Docs/agent-knowledge` | `docs/ue-agent-knowledge` (draft) |
-| `CODEGRAPH_PROJECT_PATH` | codegraph.md | Absolute project root passed to `codegraph sync` / MCP `projectPath` | `G:/UEProjects/Oathboard` | `G:/UEProjects/MyRoguelikeGame` (draft) |
-| `CODEGRAPH_PATH_FALLBACK` | codegraph.md | Windows PATH fallback for the `codegraph` CLI when not on PATH | `C:\Users\jzd94\AppData\Roaming\npm\codegraph.cmd` | `C:\Users\jzd94\AppData\Roaming\npm\codegraph.cmd` (draft, same machine) |
+| `CODEGRAPH_PROJECT_PATH` | codegraph.md | Absolute project root passed to `codegraph sync` / MCP `projectPath` | `<projects root>/Oathboard` (real absolute path lives in the project manifest) | `<projects root>/MyRoguelikeGame` (draft) |
+| `CODEGRAPH_PATH_FALLBACK` | codegraph.md | Windows PATH fallback for the `codegraph` CLI when not on PATH | `<user home>\AppData\Roaming\npm\codegraph.cmd` (real absolute path lives in the project manifest, not here) | same machine, same value (draft) |
 | `UTF8_MARKERS_TOOL` | agent-doc-safety.md | Project-specific script for editing ASCII marker blocks in Chinese docs | `oath_utf8_markers.py` | not applicable — MR has no equivalent tool yet (draft: TBD, may reuse Oathboard's script or omit) |
 
 ## Slots (multi-line)
@@ -81,12 +81,11 @@ After rendering, any leftover `{{` in the output is a hard error (missing key).
 ## Skills/Commands placeholders
 
 Added when `skills/*/SKILL.md` and `commands/*.md` were seeded into this repo (2026-07-06), per
-Oathboard's `Docs/agent-knowledge/fable/skills-merge-dossier.md` merge dossier. These are **not**
-yet wired into `scripts/stack_render.py` — that renderer currently only handles `rules`/`sdd`/
-`tdd`/`pylib` targets. Extending it to also render `skills/`/`commands/` is separate future work;
-this section only documents the placeholder keys the seeded templates already use, so that
-extension has a ready-made key list. Same three-mechanism convention as above (`{{KEY}}` /
-`{{SLOT:KEY}}` / `OPTIONAL:KEY`).
+Oathboard's `Docs/agent-knowledge/fable/skills-merge-dossier.md` merge dossier. Since the
+2026-07-07 symmetric migration these **are** rendered by `scripts/stack_render.py` (targets:
+`rules`, `skills`, `commands`; `sdd`/`tdd`/`pylib` are consumed directly from the submodule and
+never rendered). Same three-mechanism convention as above (`{{KEY}}` / `{{SLOT:KEY}}` /
+`OPTIONAL:KEY`).
 
 ### Params (single-value)
 
@@ -100,13 +99,14 @@ extension has a ready-made key list. Same three-mechanism convention as above (`
 | `PY_OPS_PACKAGE` | ue-py-evolve | Name of the project's promoted-Python-ops package under `Content/Python/` (Phase B target) | `oath_ops` | `mr_ops` (draft) |
 | `PY_OPS_ARCHITECTURE_DOC` | ue-py-evolve | Filename (under `{{KB_ROOT}}/modules/`) of the ops-architecture index doc that Phase B promotions must update | not yet named (Oathboard has no equivalent doc today; candidate name TBD) | `python-ops-architecture.md` (draft) |
 | `UE_PY_EVOLVE_SCRIPTS_DIR` | ue-py-evolve, ue-doc-audit (skill + command) | Path to the `ue-py-evolve` skill's `scripts/` dir, containing `knowledge_graph_check.py` / `agent_stack_check.py` | `.cursor/skills/ue-py-evolve/scripts` | `.cursor/skills/ue-py-evolve/scripts` |
-| `PROJECT_ROOT` | ue-doc-audit (command), ue-py-extend | Absolute project root, used in `cd`/compile commands | `G:/UEProjects/Oathboard` | `G:/UEProjects/MyRoguelikeGame` (draft) |
+| `PROJECT_ROOT` | ue-doc-audit (command), ue-py-extend | Absolute project root, used in `cd`/compile commands | `<projects root>/Oathboard` (real absolute path lives in the project manifest) | `<projects root>/MyRoguelikeGame` (draft) |
 | `ENGINE_ROOT` | ue-py-extend | Absolute engine root (`Engine/` dir), used in compile commands | `G:/UnrealEngine/UE_5.7/Engine` | draft — same machine, same value until MR pins its own engine build |
 | `PROJECT_NAME` | ue-py-extend | Project short name, used to build `<Project>Editor` target and `.uproject` filename | `Oathboard` | `MyRoguelikeGame` (draft) |
 | `BUILD_WORKFLOW_DOC` | ue-build-launch, ue-build-no-config | Link target for the project's build/launch workflow doc, read before running the script | not yet named (Oathboard has no dedicated doc yet; candidate: a new `Docs/agent-knowledge/modules/build-and-launch-workflow.md`) | `docs/ue-agent-knowledge/modules/build-and-launch-workflow.md` (draft) |
 | `BUILD_LAUNCH_SCRIPT` | ue-build-launch, ue-build-no-config, ue-launch-config | 项目根薄壳，转调共享 `scripts/Build-And-Launch.ps1`（config 驱动，见 `.ue-py-config.json` `toolchain.build_launch`） | `Build-And-Launch.ps1`（repo root） | `Build-And-Launch.ps1`（repo root） |
 | `CONFIG_RUN_STEPS` (slot) | ue-python-config | Full multi-line command block for step 4 — the `-f` config script invocation PLUS any chained follow-up gates (e.g. Oathboard runs `validate_all_static.py` after `setup_gate0_map.py`). Replaces the former single-script `CONFIG_SCRIPT` param, which silently dropped chained steps | `python $uePy -f (Join-Path $PWD "Content/Python/setup_gate0_map.py")` + chained `python Content/Python/oath_project/validate_all_static.py` | `python $uePy -f (Join-Path $PWD "Content/Python/final_phase1_config.py")` (draft) |
 | `PROJECT_WINDOW_TITLE` | ue-live-coding | Editor window title `AppActivate` looks for | `Oathboard` | `MyRoguelikeGame` (draft) |
+| `TECH_DEBT_REGISTER_PATH` | ue-task-retrospective (inside OPTIONAL:TECH_DEBT_ROUTING) | Project-root-relative path of the project's tech-debt register file that retrospective residuals get routed into. Only referenced inside the optional block — projects without a register omit both | `Docs/plans/tech-debt.md` | not configured (block omitted; MR-scope debts are recorded in Oathboard's single register while MR is frozen) |
 
 ### Slots (multi-line)
 
@@ -132,6 +132,7 @@ extension has a ready-made key list. Same three-mechanism convention as above (`
 | `LONG_TASK_GOVERNANCE` | ue-task-retrospective | Renders the long-task governance checklist (scope audit, evidence layering, multi-agent reconciliation, commit scope, residual routing). Self-contained; `{{SLOT:LONG_TASK_GOVERNANCE_LINK}}` may be left empty | Configured — Oathboard has no dedicated module yet, so `LONG_TASK_GOVERNANCE_LINK` renders empty; the checklist itself still applies | Configured (draft) — MR has `long-task-governance-retrospective.md`, so its `LONG_TASK_GOVERNANCE_LINK` would point there |
 | `ESCAPED_BUG_ADDENDUM` | ue-task-retrospective | Renders the closing "generalize before closing" reminder for any escaped bug with a reusable root-cause class | Configured — generic wording, no project-specific content needed | Configured (draft) — same generic wording applies |
 | `VISUAL_DEBUG_PROJECT_IMPL` | ue-visual-debug | Project reference-implementation paragraphs after the Smallest-Change table (API names, multi-state color semantics, project KB links). Added so MR's own implementation notes (`RegisterCombatDebugFlash`, block-flash vs held-E-circle distinction) survive shared consumption | Not configured (Oathboard has no impl yet) | Configured — MR original 参考实现 + CombatRoom 五色 paragraphs verbatim |
+| `TECH_DEBT_ROUTING` | ue-task-retrospective | Renders the 技术债路由 closing section: routes non-blocking residuals (unverified paths, accepted downgrades, known-not-fixed items) into the project's tech-debt register, with event-driven revisit triggers. Uses `{{TECH_DEBT_REGISTER_PATH}}` inside | Configured — register at `Docs/plans/tech-debt.md` | Not configured (block omitted while MR is frozen) |
 
 ### Notes on this section
 

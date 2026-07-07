@@ -13,6 +13,7 @@ disable-model-invocation: true
 | 时机 | 必须？ |
 |------|--------|
 | {{SLOT:DOC_AUDIT_TRIGGERS}} |
+| 每个 Gate / 里程碑收口 | 建议（必含剪枝 Pass + 生命周期检查） |
 | 大改 rules 或 KB 后 | 建议 |
 | 感觉 checklist 与 rules 不一致 | 建议 |
 | 单次 `ue-py-evolve` 只改 1–2 处 KB | 否（只跑 `knowledge_graph_check --check` 即可） |
@@ -64,6 +65,33 @@ python {{UE_PY_EVOLVE_SCRIPTS_DIR}}/knowledge_graph_check.py --inventory
 - 给「加」配一个「删」的回路；孤儿、重复、冻结内容优先归档。
 
 治理过重的解药不是更多治理，是给增长配背压。
+
+### 生命周期检查（剪枝 Pass 的机械底座）
+
+三问中的孤儿与重复由共享工具 `kb_lifecycle` 机械化，另加过期与废弃引用检测：
+
+```powershell
+cd {{PROJECT_ROOT}}
+$env:PYTHONPATH = "agent-stack-shared/pylib"
+python -m kb_lifecycle --kb-root {{KB_ROOT_FROM_PROJECT}}
+```
+
+检查项：metadata 完整性（条目须有 `status: active|deprecated` + `updated: YYYY-MM-DD`）、
+stale（`updated` 超 180 天 → retirement candidate）、deprecated 条目仍被 active 文档引用、
+合并候选（tags 高重合 / 同名跨 `modules/`/`concepts/`）、孤儿条目。
+
+对报告逐项给出处置提案，与「加」的清单一起进第 5 步审查报告：
+
+| 处置 | 动作 |
+|------|------|
+| **merge** | fold 进既有家族表/模块，删被并方，改齐入站链接 |
+| **retire** | 直接删除（git 历史即归档，不建 archive 目录）；先确认无护栏仍依赖它 |
+| **refresh** | 内容仍准确 → 只更新 `updated` 日期 |
+| **automate** | 坑已被机器 validator 覆盖 → 压缩为一行 tag + validator 链接 |
+
+工具是 advisory（WARN 不挂 CI）；处置一律走第 6 步用户确认，执行后重跑
+markdown links / graph check 保证链接不烂。字段标准与节奏的权威说明在项目侧
+[agent-doc-governance.md]({{KB_ROOT_FROM_SKILLS}}/modules/agent-doc-governance.md)。
 
 ## 禁止
 

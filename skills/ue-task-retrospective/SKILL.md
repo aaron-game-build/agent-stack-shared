@@ -293,12 +293,30 @@ disable-model-invocation: true
 - **Evidence layering**：哪些证据分别证明了机制、运行时生命周期、截图状态、人工 L4/观感？
 - **Multi-agent reconciliation**：如果有子任务/子 Agent 产出证据，主 Agent 采纳了哪些、拒绝了哪些、被后续结果取代了哪些？
 - **Commit scope**：提交前是否应该给用户看一份 Included / Excluded / Large assets / Evidence / Residuals 清单？
-- **Residual routing**：哪些非阻塞问题应该归入调优 backlog，而不是当前任务的阻塞项？
+- **Residual routing**：哪些非阻塞问题应该归入调优 backlog，而不是当前任务的阻塞项？（若项目配置了技术债登记簿，按「技术债路由」节落账）
 
 若长任务中同时出现了逃逸 bug，五层 guardrail 表和 long-task governance 摘要都要输出，不要用一个替代另一个。
 
 {{SLOT:LONG_TASK_GOVERNANCE_LINK}}
 <!-- END OPTIONAL:LONG_TASK_GOVERNANCE -->
+
+<!-- BEGIN OPTIONAL:TECH_DEBT_ROUTING -->
+## 技术债路由
+
+复盘收尾时，把以下三类**非阻塞残留**记入项目技术债登记簿 `{{TECH_DEBT_REGISTER_PATH}}`，
+不要只留在复盘输出或提交信息里：
+
+- **未验证路径**：DryRun/静态验证过但从未实跑、L3 只覆盖了部分分支、验证依赖尚不存在的条件（如另一个项目解冻、第三消费方接入）
+- **降级/延后决定**：为收敛当前任务而明确接受的次优实现、留待触发条件成熟再处理的问题
+- **已知但不修**：基线遗留、外部依赖缺陷、与当前方向冲突而搁置的项
+
+每条按登记簿现有表格式落账：scope、标题、记入日期、**复查触发条件（事件驱动优先于日期）**、状态。
+已有同项条目则更新其状态/触发条件，不重复记。债务被清偿或转为正式任务时改 `closed`/`converted`，
+不删行。
+
+判别口径：会被下一个 Gate 收口或 doc-audit 追问「这个验过没有」的事 → 登记簿；
+纯知识/坑 → KB（走 evolve）；两者都是 → 各记一条并互链。
+<!-- END OPTIONAL:TECH_DEBT_ROUTING -->
 
 <!-- BEGIN OPTIONAL:ESCAPED_BUG_ADDENDUM -->
 ## Escaped-bug addendum：收尾前先泛化
