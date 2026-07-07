@@ -40,4 +40,4 @@ from audit_runner import run_audit_modules
 run_audit_modules(modules, content_python_dir, ok_token="RUN_CORE_AUDITS_OK")
 ```
 
-See `agent-stack/pylib/sdd_tdd/audit_runner.py`.
+See `pylib/sdd_tdd/audit_runner.py`.

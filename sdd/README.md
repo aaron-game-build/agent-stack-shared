@@ -31,7 +31,7 @@ Where does the result write back?
 
 ## Adoption Guide (New Project)
 
-1. **Copy** `agent-stack/sdd/`, `agent-stack/tdd/`, and `agent-stack/pylib/sdd_tdd/` into the repo (or submodule).
+1. **Submodule** this repo (or copy `sdd/`, `tdd/`, and `pylib/sdd_tdd/` from it).
 2. **Bind** project identity in root `AGENTS.md` and a validation lock file (e.g. `Docs/plans/current-validation-lock.md`).
 3. **Create** `Content/Python/<project>_project/feature_specs.py` — catalog only, no hardcoded active lists in validators.
 4. **Add** thin validators that call `spec_schema.validate_catalog()` and `probe_hygiene.check()`.
@@ -41,10 +41,10 @@ Where does the result write back?
 ## Relationship to TDD
 
 SDD owns **what** must stay true and **where** proof lives.
-TDD (`agent-stack/tdd/`) owns **how** audits, probes, and aggregation gates run.
+TDD (`tdd/`) owns **how** audits, probes, and aggregation gates run.
 See [../tdd/README.md](../tdd/README.md).
 
 ## Cross-Project Extraction
 
-Move `agent-stack/sdd/` + `agent-stack/tdd/` + `agent-stack/pylib/sdd_tdd/` wholesale.
+Submodule `agent-stack-shared` (or copy `sdd/` + `tdd/` + `pylib/sdd_tdd/` from it).
 Each game repo keeps: `AGENTS.md`, validation lock, `feature_specs.py` catalog, domain probes/audits.

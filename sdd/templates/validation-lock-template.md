@@ -8,7 +8,7 @@ One paragraph: what this validation phase must prove.
 
 ## SDD Snapshot
 
-Protocol: `agent-stack/sdd/protocol.md` (generic) + project binding doc if any.
+Protocol: `agent-stack-shared/sdd/protocol.md` (generic) + project binding doc if any.
 
 ### Freeze Baseline
 

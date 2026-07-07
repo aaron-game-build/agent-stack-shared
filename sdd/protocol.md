@@ -87,5 +87,5 @@ After a feature slice reaches declared evidence:
 
 Enable when a change touches a **core dependency** whose blast radius spans multiple
 features (input grants, rule engine entry points, shared runtime facades). Use
-`agent-stack/pylib/sdd_tdd/contract_model.py` + project-specific registry rows.
+`pylib/sdd_tdd/contract_model.py` + project-specific registry rows.
 Do not enable before the first such dependency exists.
