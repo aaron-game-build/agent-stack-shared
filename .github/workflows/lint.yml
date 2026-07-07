@@ -28,3 +28,7 @@ jobs:
           set -o pipefail
           python scripts/template_lint.py | tee lint.log
           grep -q "TEMPLATE_LINT_OK" lint.log
+
+      - name: Run pylib unit tests
+        shell: bash
+        run: python -m unittest discover -s pylib -p "test_*.py"

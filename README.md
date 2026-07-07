@@ -29,6 +29,28 @@ batch 2 (see Oathboard's `skills-merge-dossier.md` for the per-item convergence 
 `ue-pie-probe` deliberately stays project-local on both sides (scenario-driven structure), and
 each project keeps its own project-only skills/commands untouched by rendering.
 
+## pylib layering (UE-light vs editor-only)
+
+`pylib/` is consumed directly from the submodule via a sys.path shim in each project (e.g.
+Oathboard's `oath_project/stack_paths.py`) — it is **not** rendered. Two package classes with
+different CI treatment:
+
+- **UE-light** (e.g. `sdd_tdd`): never imports `unreal`; importable and unit-testable in any
+  plain Python process. Shared CI and consumer static gates run its tests directly.
+- **editor-only** (e.g. `ue_probe`): imports `unreal` at module level and runs inside the UE
+  Editor Python environment only. Its package `__init__` must stay import-free so unittest
+  discovery and non-editor tooling can traverse it; CI coverage comes from stub-injected unit
+  tests (the `tests/` module installs a fake `unreal` before importing) plus a no-project-marker
+  boundary test. Never add an editor-only import to a UE-light package.
+
+Shared pylib code is stateless about projects: project values (fail-token prefixes, `Saved/`
+subdirectory names, subsystem class paths) are explicit parameters, bound to defaults in each
+project's thin wrapper (e.g. `mr_ops/probe_common.py`, `oath_ops/probe_common.py`).
+
+**Not shared** (stays in each project's repo): the `*_ops` binding packages themselves, concrete
+`probes/` and `audits/`, `probe_impl` scenario code, domain content suites (e.g. combat
+contracts), and project KB modules. These are project content, not tooling.
+
 ## Placeholder mechanism (v1)
 
 - `{{KEY}}` — single-value param, inline substitution.

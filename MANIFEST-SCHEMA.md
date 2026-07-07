@@ -107,7 +107,7 @@ extension has a ready-made key list. Same three-mechanism convention as above (`
 | `ENGINE_ROOT` | ue-py-extend | Absolute engine root (`Engine/` dir), used in compile commands | `G:/UnrealEngine/UE_5.7/Engine` | draft — same machine, same value until MR pins its own engine build |
 | `PROJECT_NAME` | ue-py-extend | Project short name, used to build `<Project>Editor` target and `.uproject` filename | `Oathboard` | `MyRoguelikeGame` (draft) |
 | `BUILD_WORKFLOW_DOC` | ue-build-launch, ue-build-no-config | Link target for the project's build/launch workflow doc, read before running the script | not yet named (Oathboard has no dedicated doc yet; candidate: a new `Docs/agent-knowledge/modules/build-and-launch-workflow.md`) | `docs/ue-agent-knowledge/modules/build-and-launch-workflow.md` (draft) |
-| `BUILD_LAUNCH_SCRIPT` | ue-build-launch, ue-build-no-config, ue-launch-config | Absolute path to the root `Build-And-Launch.ps1` wrapper script (S1 decision: Oathboard adopts MR's external-script pattern) | not yet created — **S1 follow-up**: Oathboard needs its own `Build-And-Launch.ps1` before this param has a real value | `G:/UEProjects/MyRoguelikeGame/Build-And-Launch.ps1` (draft) |
+| `BUILD_LAUNCH_SCRIPT` | ue-build-launch, ue-build-no-config, ue-launch-config | Path (repo-root relative or absolute) to the root `Build-And-Launch.ps1` wrapper script (S1 decision: Oathboard adopts MR's external-script pattern) | `Build-And-Launch.ps1` (repo root; created as the S1 follow-up) | `G:/UEProjects/MyRoguelikeGame/Build-And-Launch.ps1` (draft) |
 | `CONFIG_RUN_STEPS` (slot) | ue-python-config | Full multi-line command block for step 4 — the `-f` config script invocation PLUS any chained follow-up gates (e.g. Oathboard runs `validate_all_static.py` after `setup_gate0_map.py`). Replaces the former single-script `CONFIG_SCRIPT` param, which silently dropped chained steps | `python $uePy -f (Join-Path $PWD "Content/Python/setup_gate0_map.py")` + chained `python Content/Python/oath_project/validate_all_static.py` | `python $uePy -f (Join-Path $PWD "Content/Python/final_phase1_config.py")` (draft) |
 | `PROJECT_WINDOW_TITLE` | ue-live-coding | Editor window title `AppActivate` looks for | `Oathboard` | `MyRoguelikeGame` (draft) |
 
@@ -141,10 +141,9 @@ extension has a ready-made key list. Same three-mechanism convention as above (`
 - `PY_OPS_ARCHITECTURE_DOC` and `BUILD_WORKFLOW_DOC` currently have **no real Oathboard value**
   because Oathboard has neither an ops-architecture index doc nor a build-workflow doc today —
   these are called out as gaps, not guessed at, consistent with the existing convention above.
-- `BUILD_LAUNCH_SCRIPT` has no real Oathboard value yet because S1 (adopt MR's external
-  `Build-And-Launch.ps1` pattern) is an accepted direction but the script itself has not been
-  written in Oathboard's repo — this is tracked as follow-up engineering work, not a documentation
-  gap.
+- `BUILD_LAUNCH_SCRIPT`: Oathboard's root `Build-And-Launch.ps1` now exists (the S1 follow-up was
+  executed); its first real build run is still pending and tracked as an L3 verification item,
+  not a documentation gap.
 - `FIVE_LAYER_GUARDRAIL`'s Oathboard configuration deliberately does **not** duplicate the five
   Layer/Question/Destination rows already in `incident-to-guardrail-retrospective.md` — the
   optional block links out to that module and only adds the Local Fix Generalization Gate and the
