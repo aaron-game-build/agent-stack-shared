@@ -1,6 +1,6 @@
 # Agent 输出 Verbosity
 
-降低多轮 Agent 任务的 narration token；与 [agent-contracts.md](agent-contracts.md) 互补，**不压缩** Plan Lock / BLOCKED / Direction Lock。
+降低多轮 Agent 任务的 narration token；与 [agent-contracts.mdc](agent-contracts.mdc) 互补，**不压缩** Plan Lock / BLOCKED / Direction Lock。
 
 ## 级别
 

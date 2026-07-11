@@ -9,7 +9,7 @@ L1–L4/H：{{SLOT:QUALITY_GATES_LINKS}}。
 - **Read**：{{SLOT:READ_ENTRYPOINTS}}；基线 {{SLOT:BASELINE_ADR_LINK}}。
 - **Estimate**：目标/范围/验收；非平凡任务 Plan 或列 REACT 五步。
 - **Audit**：{{SLOT:AUDIT_SCOPE_QUESTION}}？Editor/编译还是仓库？首次接触子系统？
-- **Carry**：最小 diff；Plan 锁定后勿复述 REACT；遵守 [agent-contracts.md](agent-contracts.md)、[codegraph.md](codegraph.md)、[agent-output-verbosity.md](agent-output-verbosity.md)。
+- **Carry**：最小 diff；Plan 锁定后勿复述 REACT；遵守 [agent-contracts.mdc](agent-contracts.mdc)、[codegraph.mdc](codegraph.mdc)、[agent-output-verbosity.mdc](agent-output-verbosity.mdc)。
 - **Test**：列实际检查结果；不得凭「应该可以」。
 
 非平凡任务（多文件/C++/Editor/批量脚本/探针）：**必须 E+A 后再 C**。

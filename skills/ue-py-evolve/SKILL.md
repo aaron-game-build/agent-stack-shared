@@ -86,7 +86,7 @@ disable-model-invocation: true
 
 1. 提取函数到 `Content/Python/{{PY_OPS_PACKAGE}}/<domain>.py`，补 docstring metadata（见 [tagging.md](tagging.md) `python_op`）
 2. `workflows/<name>.py` 只组合 `{{PY_OPS_PACKAGE}}`；根目录保留薄 wrapper（`sys.path` + `main()`）
-3. 更新 [{{PY_OPS_ARCHITECTURE_DOC}}]({{KB_ROOT_FROM_SKILLS}}/modules/{{PY_OPS_ARCHITECTURE_DOC}}) 索引表
+3. 更新 [{{PY_OPS_ARCHITECTURE_DOC}}]({{KB_ROOT_FROM_SKILLS}}/{{PY_OPS_ARCHITECTURE_DOC}}) 索引表
 4. concept/module 双向链接补 `{{PY_OPS_PACKAGE}}/...`
 5. 跑 `knowledge_graph_check.py --check --strict`
 

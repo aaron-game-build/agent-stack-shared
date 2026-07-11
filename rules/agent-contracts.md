@@ -1,6 +1,6 @@
 # Agent Contracts（Plan + Direction）
 
-与 [agent-react.md](agent-react.md) 互补：管**已确认 Plan** 与**口头已认可实现方向**。
+与 [agent-react.mdc](agent-react.mdc) 互补：管**已确认 Plan** 与**口头已认可实现方向**。
 
 ## §1 Plan Lock
 

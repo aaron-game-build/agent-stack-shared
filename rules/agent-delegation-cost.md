@@ -92,9 +92,9 @@
 
 ## 与既有规则
 
-- 结构查询与禁委派细则：[codegraph.md](codegraph.md)。
-- 探针 Carry 门禁：[agent-react.md](agent-react.md)。
-- 主上下文静默 Carry：[agent-output-verbosity.md](agent-output-verbosity.md)。
+- 结构查询与禁委派细则：[codegraph.mdc](codegraph.mdc)。
+- 探针 Carry 门禁：[agent-react.mdc](agent-react.mdc)。
+- 主上下文静默 Carry：[agent-output-verbosity.mdc](agent-output-verbosity.mdc)。
 <!-- BEGIN OPTIONAL:PROJECT_DELEGATION_NOTES -->
 {{PROJECT_DELEGATION_NOTES}}
 <!-- END OPTIONAL:PROJECT_DELEGATION_NOTES -->
