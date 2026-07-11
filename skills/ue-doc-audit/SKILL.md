@@ -29,11 +29,13 @@ disable-model-invocation: true
 cd {{PROJECT_ROOT}}
 python {{UE_PY_EVOLVE_SCRIPTS_DIR}}/agent_stack_check.py --check
 python {{UE_PY_EVOLVE_SCRIPTS_DIR}}/agent_stack_check.py --check --strict
+python {{UE_PY_EVOLVE_SCRIPTS_DIR}}/knowledge_graph_check.py --check --strict
 python {{UE_PY_EVOLVE_SCRIPTS_DIR}}/knowledge_graph_check.py --inventory
 ```
 
 3. 将输出分为：**ERR 必修** / **WARN 建议** / **重复内容可收敛**（详述只保留 concepts/modules，rules/checklist 短重复）
    - `knowledge_graph_check.py --inventory` 会刷新 `concepts/inventory.generated.json`；Windows 路径分隔符 diff 是 generated drift，若 strict gate 通过则只报告，不手改 JSON。
+   - `knowledge_graph_check.py --check` 报 tag-index missing/stale → 跑 `--write-tag-index` 重新生成并纳入本次 diff（生成物勿手改）。
 4. 额外套一层 **Docs Quality Lens**（只做文档质量判断，不替代 machine gate）：
    - **结构**：章节层级、入口 / 兼容入口、权威落点是否清晰
    - **文案**：面向 Agent / 人类的语气是否明确，是否有内部术语堆叠
@@ -44,6 +46,26 @@ python {{UE_PY_EVOLVE_SCRIPTS_DIR}}/knowledge_graph_check.py --inventory
 5. 向用户提交审查报告（日期、触发原因、exit code、待办表；必要时附 Docs Quality Lens）
 6. **等待用户确认**后做最小 diff 修复（仅 Markdown / 脚本；**禁止**顺带改 C++、不改 Plan 文件）
 7. 修复后重跑 `agent_stack_check.py --check --strict` 与 `knowledge_graph_check.py --check --strict`，汇报 0 error
+
+## 入口一致性与完成态回写（每次 doc-audit 必做）
+
+机器门禁抓不住的两类高危漂移，逐条人工过：
+
+**入口一致性（Entry Consistency）**
+
+- 核对所有入口文档（AGENTS.md、各 agent 入口如 CLAUDE.md、KB 入口）的路由表与优先级查询：
+  1. 指向的路径存在；`§章节` 引用能在目标文件 grep 到同名标题；
+  2. 同一查询在不同入口的指向不互相矛盾（如「当前优先级」「当前门/停止线」）；
+  3. historical / 归档 / 已完结门（如旧 Gate）文件没有被继续当作 current 入口引用。
+- 渲染产物（GENERATED 头文件）内的相对链接同样查可达性（`.md`/`.mdc` 后缀混用、
+  跨项目路径残留）；问题归因到共享仓库模板/渲染器修，**禁止手改渲染产物**。
+
+**完成态回写（Completion Writeback）**
+
+- 声称「已完成 / 已拍板」的 plan / handoff / 决策：核对工作是否真的已提交或发布、
+  状态头是否更新、当前状态文档（validation lock / project state 类）是否记录了该 delta。
+- 一次性文档（handoff、合并对照稿、drift 快照）在目标落地后必须归档或加 historical
+  标记；快照类必须标注生成日期与再生成命令，防止旧数字被当现状。
 
 ## 与 evolve / retrospective 分工
 
