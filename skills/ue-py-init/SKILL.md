@@ -69,6 +69,8 @@ powershell.exe -NoProfile -Command "(Get-Process UnrealEditor -ErrorAction Stop 
 
 ### 3. 创建知识库目录结构
 
+> **注**：以下目录结构与文件名为示例，按项目实际结构调整（已有 KB 的项目参考现有布局，勿覆盖）。
+
 在确认的路径下创建：
 
 ```
