@@ -44,6 +44,11 @@ GENERATED_MD_HEADER = (
     "edit the shared repo, not this file -->\n"
 )
 
+ADAPTER_GENERATED_HEADER = (
+    "<!-- GENERATED adapter from agent-stack-shared via stack_render.py --pull; "
+    "edit the renderer or manifest, not this file -->\n"
+)
+
 MDC_GENERATED_COMMENT = (
     "<!-- GENERATED from agent-stack-shared/rules/{name}.md via stack_render.py --pull; "
     "edit the shared repo, not this file -->\n"
@@ -107,6 +112,7 @@ def _claude_wrapper_body(name: str, canonical: str, *, kind: str, project_name: 
         f"name: {name}\n"
         f"description: Use when Claude Code needs the {project_name} {name} {label}.\n"
         f"---\n\n"
+        f"{ADAPTER_GENERATED_HEADER}\n"
         f"# {name}\n\n"
         f"Canonical {label}: `{canonical}`.\n\n"
         f"{before_heading}"
@@ -159,6 +165,7 @@ def render_adapter_wrappers(
         canonical = f"{command_canonical_dir}/{command}.md"
 
         codex_wrapper = (
+            f"{ADAPTER_GENERATED_HEADER}\n"
             f"# {command}\n\n"
             f"Canonical command: `{canonical}`.\n\n"
             f"Read the canonical command before executing.\n"
@@ -215,6 +222,7 @@ def compute_adapter_wrappers(
         canonical = f"{command_canonical_dir}/{command}.md"
 
         codex_wrapper = (
+            f"{ADAPTER_GENERATED_HEADER}\n"
             f"# {command}\n\n"
             f"Canonical command: `{canonical}`.\n\n"
             f"Read the canonical command before executing.\n"
