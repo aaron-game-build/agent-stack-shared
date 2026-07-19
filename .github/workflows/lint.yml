@@ -10,17 +10,27 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   template-lint:
     runs-on: ubuntu-latest
     env:
       PYTHONUTF8: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
+
+      - name: Scan repository credentials
+        run: |
+          python scripts/check_repository_secrets.py --self-test
+          python scripts/check_repository_secrets.py
 
       - name: Run template lint
         shell: bash
