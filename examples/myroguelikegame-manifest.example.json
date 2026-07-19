@@ -93,7 +93,7 @@
         },
         "human-validation-handoff": {
           "description": "Human-readable handoff is required for user L4/H validation.",
-          "alwaysApply": true
+          "alwaysApply": false
         },
         "codegraph": {
           "description": "CodeGraph MCP usage guide — when to use which tool",
