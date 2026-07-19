@@ -1,15 +1,15 @@
 # Human Validation Handoff
 
-When stopping for user L4/H validation, include a player-facing handoff. Do not give only tokens, script names, empty fields, or "please validate."
+When stopping for user L4/H validation, give a player-facing handoff, not only tokens, scripts, empty fields, or "please validate."
 
 Must include: `Validation goal`, `Entry point`, `Player steps`, `Observation points`, `Pass criteria`, `Failure/tuning route`, `Out of scope this round`, and `Response format`.
 
 ## Instantiate the goal; never ship bare words
 
-`Validation goal` must be instantiated from the project's active validation lock / gate definition — the specific open question this gate answers, plus the concrete changes in this build. Bare quality words (`fun`, `playability`, `娱乐性`, `可玩性`, `好玩`, `feel good`) are not a validation goal; they name the whole game, not what this round can decide. Turn the gate's open question into a falsifiable, observable statement and point the observation points at this build's actual changes.
+Instantiate `Validation goal` from the active validation lock: the gate's open question plus this build's changes. Bare quality words (`fun`, `playability`, `娱乐性`, `可玩性`, `好玩`, `feel good`) name the whole game, not a falsifiable round goal. Observation points must target the actual changes.
 
-`Out of scope this round` must list what is deliberately NOT being judged (frozen systems, thin content not yet wired, provisional numbers). This exists so a reviewer's "I can't tell" does not collapse into a Fail: name the verdict vocabulary and keep "can't tell because X is out of scope" distinct from "the mechanic was exercised and has no teeth."
+`Out of scope this round` lists deliberately unjudged frozen systems, unwired content, or provisional numbers. Keep "can't tell because X is out of scope" distinct from "the mechanic was exercised and has no teeth."
 
-If entry or steps are unknown, say the handoff is not ready and name the missing prerequisite. Do not claim feel/readability/fun/UI clarity from probes alone.
+If entry/steps are unknown, mark the handoff unready and name the prerequisite. Probes alone cannot prove feel/readability/fun/UI clarity.
 
 Details: [human-validation-handoff.md]({{KB_ROOT}}/modules/human-validation-handoff.md).
