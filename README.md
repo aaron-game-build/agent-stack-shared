@@ -2,7 +2,7 @@
 
 A standalone repository of domain-neutral agent rules, skills, commands, and the SDD/TDD
 framework layer, shared across UE projects (currently Oathboard and MyRoguelikeGame) and across
-tools (Claude Code, Cursor, Codex). Remote: https://github.com/aaron-game-build/agent-stack-shared.
+tools (Claude Code, Cursor, Codex). Remote: https://github.com/aaron-personal-os/agent-stack-shared.
 
 ## What belongs in the shared layer vs. the project layer
 
